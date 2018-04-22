@@ -7,6 +7,38 @@
 #include "mstrings.h"
 #include "memory.h"
 
+unsigned char inputCount = 0;
+unsigned char password_Input[4] = {'x', 'x', 'x', 'x'};
+unsigned char locker_one_status = 0;
+unsigned char locker_two_status = 0;
+unsigned char incorrect_delay_count = 0;
+unsigned short lock_delay_count = 0;
+unsigned char valid_delay_count = 0;
+unsigned char keypadEntry = '\0';
+unsigned char attempts = 0;
+
+unsigned char cursorIndex = 0;
+unsigned char cursorPosition = 0;
+
+//in prog flags
+unsigned char passwordProg = 0;
+unsigned char passwordComplete = 0;
+unsigned char passwordCorrect = 0;
+unsigned char checkComplete = 0;
+
+//menu screen
+//LCD_Cursor(((cursorIndex % 2) + 1) * 16);
+
+enum inputUser{initialLogin, resettingSystem, resettingPassword, unlockingManually};
+enum inputUser currentuser = -1;
+
+enum delayUser{initialDelay, resettingSystemDelay, resettingPasswordDelay, unlockingManuallyDelay};
+enum delayUser currentDelay = -1;
+
+enum returnDirection{userPromptRet, menuRet};
+enum returnDirection dir = -1;
+
+
 //ran on system reset or initialization
 void system_setup(){
 	
@@ -28,14 +60,25 @@ void system_setup(){
 	//send lock system for doors?
 }
 
-unsigned char inputCount = 0;
-unsigned char passwordInput[4] = {'x', 'x', 'x', 'x'};
-unsigned char incorrect_delay_count = 0;
-unsigned char keypadEntry = '\0';
-unsigned char attempts = 0;
-unsigned short lock_delay_count = 0;
+void menu_start(){
+	valid_delay_count = 0;
+	LCD_ClearScreen();
+	LCD_DisplayString(1,menuOptions[0]);
+	LCD_DisplayString(17,menuOptions[1]);
+	LCD_Cursor(16);
+	LCD_WriteData('+');
+	LCD_Cursor(32);
+	LCD_WriteData('-');
+	cursorIndex = 0;
+	cursorPosition = 0;
+	LCD_Cursor(((cursorIndex % 2) + 1) * 16);
+	keypadEntry = 'x';	
+}
 
-enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, lockedState, mainMenu, childUser};
+enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
+		  lockedState, validDelay, mainMenu, lockItem, manualUnlock, display, passwordReset,
+		  systemReset, childUser};
+		  
 int Menu_Flow(int state)
 {
 	//transitions
@@ -83,9 +126,11 @@ int Menu_Flow(int state)
 				LCD_DisplayString(1,loginTop);
 				LCD_Cursor(33);
 				keypadEntry = 'x';
+				passwordProg = 1;
+				currentuser = initialLogin;
 				
 			}
-			else if(keypadEntry == '#'){
+			else if(keypadEntry == 'D'){
 				state = welcomeInit;
 			}
 			else{
@@ -94,17 +139,45 @@ int Menu_Flow(int state)
 			break;
 			
 		case loginCheck:
-
-			if(keypadEntry <= '9' && keypadEntry >= '0'){
-				passwordInput[inputCount] = keypadEntry;
-				LCD_Cursor(inputCount + 17);
-				LCD_WriteData(keypadEntry);
-				++inputCount;
-				keypadEntry = 'x';
+		
+			if(!passwordProg && checkComplete && passwordCorrect){
+				state = validDelay;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				attempts = 0;
 			}
+			else if(!passwordProg && checkComplete && !passwordCorrect){
+				attempts += 1;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				if(attempts >= 3){
+					state = lockedState;
+					currentuser = -1;
+					dir = -1;
+					attempts = 0;
+				}
+				else{
+					currentDelay = initialDelay;
+					state = incorrectDelay;
+				}
+			}
+			else{
+				state = loginCheck;
+			}
+			
+			if(dir == userPromptRet){
+				currentuser = -1;
+				dir = -1;
+				LCD_DisplayString(1,preLoginTop);
+				LCD_DisplayString(17,preLoginBot);
+				LCD_Cursor(33);
+				state = prelogin;
+			}
+			
 			break;
 			
 		case lockedState:
+			//locks system for 1 min (for now)
 			if(lock_delay_count == 5){
 				LCD_ClearScreen();
 				LCD_DisplayString(1, lockMessage);
@@ -119,23 +192,170 @@ int Menu_Flow(int state)
 		break;
 		
 		case incorrectDelay:
+		
+			switch(currentDelay){
+				case -1:
+					break;
+					
+				case initialDelay:
+					if(incorrect_delay_count == 5){
+						LCD_ClearScreen();
+						LCD_DisplayString(1, failLogin);
+						LCD_Cursor(33);
+					}
+					else if(incorrect_delay_count >= 20){
+						incorrect_delay_count = 0;
+						passwordProg = 1;
+						state = loginCheck;
+						currentDelay = -1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1,loginTop);
+						LCD_Cursor(33);
+						keypadEntry = 'x';
+					}
+					break;
+					
+				case resettingSystemDelay:
+					break;
+					
+				case resettingPasswordDelay:
+					if(incorrect_delay_count == 5){
+						LCD_ClearScreen();
+						LCD_DisplayString(1, failLogin);
+						LCD_Cursor(33);
+					}
+					else if(incorrect_delay_count >= 20){
+						incorrect_delay_count = 0;
+						passwordProg = 1;
+						state = passwordReset;
+						currentDelay = -1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1,loginTop);
+						LCD_Cursor(33);
+						keypadEntry = 'x';
+					}
+					break;
+					
+				case unlockingManuallyDelay:
+					break;
+					
+				default:
+					break;
+			}
 			//slight transition delay
-			if(incorrect_delay_count == 5){
+			break;
+			
+		case validDelay:
+			//slight transition delay
+			if(valid_delay_count == 5){
 				LCD_ClearScreen();
-				LCD_DisplayString(1, failLogin);
+				LCD_DisplayString(1,successLogin);
 				LCD_Cursor(33);
 			}
-			else if(incorrect_delay_count >= 20){
-				incorrect_delay_count = 0;
-				state = loginCheck;
-				LCD_ClearScreen();
-				LCD_DisplayString(1,loginTop);
-				LCD_Cursor(33);
-				keypadEntry = 'x';
+			else if(valid_delay_count >= 20){
+				menu_start();	
+				state = mainMenu;
+				valid_delay_count = 0;
 			}
 			break;
 			
 		case mainMenu:
+			if(keypadEntry == 'B'){
+				keypadEntry = 'x';
+				switch (cursorIndex)
+				{
+					case 0:
+						state = lockItem;
+						LCD_ClearScreen();
+						LCD_Cursor(1);
+						LCD_WriteData(cursorIndex + 48);
+						break;
+						
+					case 1:
+						state = manualUnlock;
+						LCD_ClearScreen();
+						LCD_Cursor(1);
+						LCD_WriteData(cursorIndex + 48);
+						break;
+						
+					case 2:
+						state = display;
+						LCD_ClearScreen();
+						LCD_Cursor(1);
+						LCD_WriteData(cursorIndex + 48);
+						break;
+						
+					case 3:
+						state = passwordReset;
+						LCD_ClearScreen();
+						LCD_DisplayString(1, loginTop);
+						LCD_Cursor(33);
+						passwordProg = 1;
+						currentuser = resettingPassword;
+						break;
+						
+					case 4:
+						state = systemReset;
+						LCD_ClearScreen();
+						LCD_Cursor(1);
+						LCD_WriteData(cursorIndex + 48);
+						break;
+					
+					case 5:
+						state = welcomeInit;
+						break;
+				}
+				cursorIndex = 0;
+				cursorPosition = 0;
+			}
+			break;
+			
+		case lockItem:
+			break;
+		
+		case manualUnlock:
+			break;
+		
+		case display:
+			break;
+		
+		case passwordReset:
+			if(!passwordProg && checkComplete && passwordCorrect){
+				LCD_DisplayString(1, newPassword);
+				/*passwordProg = 0;
+				passwordCorrect = 0;
+				attempts = 0;*/
+			}
+			else if(!passwordProg && checkComplete && !passwordCorrect){
+				attempts += 1;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				if(attempts >= 3){
+					state = mainMenu;
+					currentuser = -1;
+					dir = -1;
+					menu_start();
+					attempts = 0;
+				}
+				else{
+					state = incorrectDelay;
+					currentDelay = resettingPasswordDelay;
+				}
+			}
+			else{
+				state = passwordReset;
+			}
+			
+			if(dir == menuRet){
+				currentuser = -1;
+				dir = -1;
+				menu_start();	
+				state = mainMenu;
+				LCD_Cursor(33);
+			}
+			break;
+		
+		case systemReset:
 			break;
 		
 		default:
@@ -167,32 +387,6 @@ int Menu_Flow(int state)
 			break;
 			
 		case loginCheck:			
-			if(inputCount >= 4){
-				//advance
-				inputCount = 0;
-				retrieve_password();
-				for(int i = 0; i < 4; ++i){
-					if(passwordInput[i] != password[i]){
-						attempts++;
-						if(attempts >= 3){
-							state = lockedState;	
-							attempts = 0;
-						}	
-						else{					
-							state = incorrectDelay;
-						}
-						break;
-					}
-				}
-				//not sure if needed to test this later
-				if(state == loginCheck){
-					state = mainMenu;
-					attempts = 0;
-					LCD_ClearScreen();
-					LCD_DisplayString(1,successLogin);
-				}
-			}			
-			
 			break;
 		
 		case lockedState:
@@ -202,8 +396,67 @@ int Menu_Flow(int state)
 		case incorrectDelay:
 			incorrect_delay_count += 1;
 			break;
+			
+		case validDelay:
+			valid_delay_count += 1;
+			break;
 		
 		case mainMenu:
+			PORTD = (cursorPosition << 5) | cursorIndex;
+			if(keypadEntry == 'A'){
+				if(cursorIndex > 0){
+					if(cursorPosition == 0){
+						cursorPosition = 1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1,menuOptions[cursorIndex - 1]);
+						LCD_DisplayString(17,menuOptions[cursorIndex]);		
+						LCD_Cursor(16);
+						LCD_WriteData('+');
+						LCD_Cursor(32);
+						LCD_WriteData('-');
+					}
+					else{
+						cursorPosition = 0;
+						cursorIndex -= 1;
+					}
+				}
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == 'C'){
+				if(cursorIndex < 5){
+					if(cursorPosition == 1){
+						cursorPosition = 0;
+						LCD_ClearScreen();
+						LCD_DisplayString(1,menuOptions[cursorIndex]);
+						LCD_DisplayString(17,menuOptions[cursorIndex + 1]);
+						LCD_Cursor(16);
+						LCD_WriteData('+');
+						LCD_Cursor(32);
+						LCD_WriteData('-');
+					}
+					else{
+						cursorPosition = 1;	
+						cursorIndex += 1;					
+					}
+				}
+				keypadEntry = 'x';
+			}
+			LCD_Cursor(((cursorPosition % 2) + 1) * 16);
+			break;
+		
+		case lockItem:
+			break;
+			
+		case manualUnlock:
+			break;
+			
+		case display:
+			break;
+			
+		case passwordReset:
+			break;
+			
+		case systemReset:
 			break;
 		
 		default:
@@ -223,7 +476,6 @@ int Keypad_Input(int state)
 			break;
 		
 		case toggle:
-				PORTD = 0x00;
 			if(GetKeypadKey() != '\0'){
 				keypadEntry = GetKeypadKey();				
 				state = press;	
@@ -233,8 +485,7 @@ int Keypad_Input(int state)
 			}
 			break;
 			
-		case press:
-				PORTD = 0xFF;		
+		case press:	
 			if(GetKeypadKey() != '\0'){
 				state = press;
 			}
@@ -264,6 +515,126 @@ int Keypad_Input(int state)
 		
 		default:
 			break;
+	}
+	return state;
+}
+
+enum PasswordCheck{idle, inputWait, passwordVerify};
+int Password_Verify(int state)
+{
+	//transitions
+	switch(state)
+	{
+		case -1:
+			state = idle;
+			break;
+		
+		case idle:
+			if(passwordProg){
+				state = inputWait;
+			}
+			else{
+				state = idle;
+			}
+			break;
+		
+		case inputWait:
+			if(passwordComplete){
+				passwordProg = 0;
+				passwordComplete = 0;
+				state = passwordVerify;
+			}
+			else{
+				state = inputWait;
+			}
+			break;				
+		
+		case passwordVerify:
+			if(checkComplete){
+				checkComplete = 0;
+				state = idle;
+			}
+			else{
+				state = passwordVerify;
+			}
+			break;
+		
+		
+		default:
+		state = -1;
+		break;
+	}
+	
+	//actions
+	switch(state)
+	{
+
+		case -1:
+		break;
+		
+		case idle:
+			break;
+		
+		case inputWait:
+			if(keypadEntry <= '9' && keypadEntry >= '0'){
+				password_Input[inputCount] = keypadEntry;
+				LCD_Cursor(inputCount + 17);
+				LCD_WriteData(keypadEntry);
+				++inputCount;
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == 'D'){
+				//handle all cases where this is used
+				inputCount = 0;
+				passwordProg = 0;
+				state = idle;
+				LCD_ClearScreen();
+				keypadEntry = 'x';
+				switch (currentuser)
+				{
+					case initialLogin:
+						dir = userPromptRet;
+						break;
+						
+					case resettingSystem:
+						//TODO
+						break;
+						
+					case resettingPassword:
+						dir = menuRet;
+						break;
+						
+					case unlockingManually:
+						//TODO
+						break;
+						
+					default:
+						//TODO
+						break;
+				}
+			}
+			
+			if(inputCount >= 4){
+				inputCount = 0;
+				retrieve_password();
+				passwordComplete = 1;
+			}
+			break;
+		
+		case passwordVerify:
+			for(int i = 0; i < 4; ++i){
+				if(password_Input[i] != password[i]){
+					passwordCorrect = 0;
+				}
+				else{
+					passwordCorrect = 1;
+				}
+			}
+			checkComplete = 1;
+			break;
+		
+		default:
+		break;
 	}
 	return state;
 }

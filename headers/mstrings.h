@@ -5,7 +5,7 @@ const unsigned char * welcomeTop = "Welcome! :)";
 const unsigned char * welcomeBot = "Hit * to start";
 
 const unsigned char * preLoginTop = "1:Child 2:Parent";
-const unsigned char * preLoginBot = "Hit # to quit";
+const unsigned char * preLoginBot = "Hit < to quit";
 
 //child path
 
@@ -17,8 +17,8 @@ const unsigned char * successLogin = "Correct login!";
 const unsigned char * lockMessage = "Locked for 1 min";
 
 //menu strings
-const char * menuOptions[6] = {"Lock Item", "Manual Unlock","Status Display", 
-							   "Password Reset", "System Reset", "Logout"};
+const unsigned char * menuOptions[6] = {"Lock Item", "Manual Unlock","Status Display", 
+							            "Password Reset", "System Reset", "Logout"};
 
 //Lock Item
 
@@ -27,7 +27,8 @@ const char * menuOptions[6] = {"Lock Item", "Manual Unlock","Status Display",
 //Display Time
 
 //Password Reset
-
+const unsigned char * newPassword = "New password:";
+const unsigned char * resetComplete = "Password Reset!";
 //System Reset
 
 const unsigned char * child = "Kids";
