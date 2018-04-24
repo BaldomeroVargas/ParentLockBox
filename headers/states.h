@@ -26,6 +26,14 @@ unsigned char passwordComplete = 0;
 unsigned char passwordCorrect = 0;
 unsigned char checkComplete = 0;
 
+unsigned char overwriteComplete = 0;
+unsigned char overwriteDelay = 0;
+
+
+//for unlock later
+unsigned char systemResetUnlock = 0;
+unsigned char reset_delay_count = 0;
+
 //menu screen
 //LCD_Cursor(((cursorIndex % 2) + 1) * 16);
 
@@ -38,10 +46,29 @@ enum delayUser currentDelay = -1;
 enum returnDirection{userPromptRet, menuRet};
 enum returnDirection dir = -1;
 
+void welcome_reset(){
+	passwordProg = 0;
+	passwordComplete = 0;
+	passwordCorrect = 0;
+	checkComplete = 0;
+
+	overwriteComplete = 0;
+	overwriteDelay = 0;
+	attempts = 0;
+
+	cursorIndex = 0;
+	cursorPosition = 0;
+	incorrect_delay_count = 0;
+	lock_delay_count = 0;
+	valid_delay_count = 0;
+	inputCount = 0;
+	dir = -1;
+	currentDelay = -1;
+	currentuser = -1;
+}
 
 //ran on system reset or initialization
 void system_setup(){
-	
 	eeprom_write_byte((uint8_t*)75, '0');
 	eeprom_write_byte((uint8_t*)76, '0');
 	eeprom_write_byte((uint8_t*)77, '0');
@@ -51,13 +78,15 @@ void system_setup(){
 	eeprom_write_byte((uint8_t*)101, 'x');
 	eeprom_write_byte((uint8_t*)102, 'x');
 	eeprom_write_byte((uint8_t*)103, 'x');	
+	eeprom_write_byte((uint8_t*)104, 'x');
+	eeprom_write_byte((uint8_t*)105, 'x');
 	
 	eeprom_write_byte((uint8_t*)200, 'x');
 	eeprom_write_byte((uint8_t*)201, 'x');
 	eeprom_write_byte((uint8_t*)202, 'x');
 	eeprom_write_byte((uint8_t*)203, 'x');
-	
-	//send lock system for doors?
+	eeprom_write_byte((uint8_t*)204, 'x');
+	eeprom_write_byte((uint8_t*)205, 'x');
 }
 
 void menu_start(){
@@ -77,7 +106,7 @@ void menu_start(){
 
 enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
 		  lockedState, validDelay, mainMenu, lockItem, manualUnlock, display, passwordReset,
-		  systemReset, childUser};
+		  newPasswordInput, systemReset, ResetMessageDelay, childUser};
 		  
 int Menu_Flow(int state)
 {
@@ -94,6 +123,7 @@ int Menu_Flow(int state)
 			
 		case welcomeInit:
 			state = welcomeToggle;
+			welcome_reset();
 			break;
 		
 		case welcomeToggle:
@@ -216,6 +246,21 @@ int Menu_Flow(int state)
 					break;
 					
 				case resettingSystemDelay:
+					if(incorrect_delay_count == 5){
+						LCD_ClearScreen();
+						LCD_DisplayString(1, failLogin);
+						LCD_Cursor(33);
+					}
+					else if(incorrect_delay_count >= 20){
+						incorrect_delay_count = 0;
+						passwordProg = 1;
+						state = systemReset;
+						currentDelay = -1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1, systemResetTop);
+						LCD_Cursor(33);
+						keypadEntry = 'x';
+					}
 					break;
 					
 				case resettingPasswordDelay:
@@ -296,9 +341,11 @@ int Menu_Flow(int state)
 						
 					case 4:
 						state = systemReset;
+						passwordProg = 1;
+						currentuser = resettingSystem;
 						LCD_ClearScreen();
-						LCD_Cursor(1);
-						LCD_WriteData(cursorIndex + 48);
+						LCD_DisplayString(1, systemResetTop);
+						LCD_Cursor(33);
 						break;
 					
 					case 5:
@@ -321,10 +368,13 @@ int Menu_Flow(int state)
 		
 		case passwordReset:
 			if(!passwordProg && checkComplete && passwordCorrect){
+				LCD_ClearScreen();
 				LCD_DisplayString(1, newPassword);
-				/*passwordProg = 0;
+				LCD_Cursor(33);
+				passwordProg = 0;
 				passwordCorrect = 0;
-				attempts = 0;*/
+				attempts = 0;
+				state = newPasswordInput;
 			}
 			else if(!passwordProg && checkComplete && !passwordCorrect){
 				attempts += 1;
@@ -355,7 +405,67 @@ int Menu_Flow(int state)
 			}
 			break;
 		
+		case newPasswordInput:
+			if(overwriteComplete){
+				if(overwriteDelay >= 30){
+					overwriteDelay = 0;
+					overwriteComplete = 0;
+					menu_start();
+					state = mainMenu;
+				}
+			}
+			break;
+		
 		case systemReset:
+			if(!passwordProg && checkComplete && passwordCorrect){
+				passwordProg = 0;
+				passwordCorrect = 0;
+				attempts = 0;
+				state = ResetMessageDelay;
+
+			}
+			else if(!passwordProg && checkComplete && !passwordCorrect){
+				attempts += 1;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				if(attempts >= 3){
+					state = mainMenu;
+					currentuser = -1;
+					dir = -1;
+					menu_start();
+					attempts = 0;
+				}
+				else{
+					state = incorrectDelay;
+					currentDelay = resettingSystemDelay;
+				}
+			}
+			else{
+				state = systemReset;
+			}
+			
+			if(dir == menuRet){
+				currentuser = -1;
+				dir = -1;
+				menu_start();
+				state = mainMenu;
+				LCD_Cursor(33);
+			}
+			break;
+		
+		case ResetMessageDelay:
+		
+			if(reset_delay_count == 5){
+				LCD_ClearScreen();
+				LCD_DisplayString(1, systemResetComplete);
+				LCD_Cursor(33);
+			}
+			else if(reset_delay_count == 20){
+				state = setup;
+				reset_delay_count = 0;
+			}
+			break;		
+		
 			break;
 		
 		default:
@@ -456,8 +566,41 @@ int Menu_Flow(int state)
 		case passwordReset:
 			break;
 			
+		case newPasswordInput:
+			if(!overwriteComplete){
+				if(keypadEntry <= '9' && keypadEntry >= '0'){
+					password[inputCount] = keypadEntry;
+					LCD_Cursor(inputCount + 17);
+					LCD_WriteData(keypadEntry);
+					++inputCount;
+					keypadEntry = 'x';
+				}
+				if(inputCount >= 4){
+					overwrite_password();
+					overwriteComplete = 1;
+					LCD_ClearScreen();
+					LCD_DisplayString(1, successfulChangeTop);
+					LCD_Cursor(17);
+					LCD_WriteData(password[0]);
+					LCD_Cursor(18);
+					LCD_WriteData(password[1]);
+					LCD_Cursor(19);
+					LCD_WriteData(password[2]);
+					LCD_Cursor(20);
+					LCD_WriteData(password[3]);
+				}			
+			}
+			else{
+				overwriteDelay++;
+			}
+			break;
+		
 		case systemReset:
 			break;
+		
+		case ResetMessageDelay:
+			reset_delay_count += 1;
+			break;			
 		
 		default:
 			break;
@@ -597,7 +740,7 @@ int Password_Verify(int state)
 						break;
 						
 					case resettingSystem:
-						//TODO
+						dir = menuRet;
 						break;
 						
 					case resettingPassword:
@@ -625,6 +768,7 @@ int Password_Verify(int state)
 			for(int i = 0; i < 4; ++i){
 				if(password_Input[i] != password[i]){
 					passwordCorrect = 0;
+					break;
 				}
 				else{
 					passwordCorrect = 1;

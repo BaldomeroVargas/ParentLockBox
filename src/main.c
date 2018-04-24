@@ -30,8 +30,8 @@ int main(void)
 	}
 	else{
 		//Task Scheduler
-		tasksNum = 2;
-		task tsks[2];
+		tasksNum = 3;
+		task tsks[3];
 		tasks = tsks;
 			
 		tasks[0].state = -1;
@@ -44,12 +44,12 @@ int main(void)
 		tasks[1].elapsedTime = tasks[1].period;
 		tasks[1].TickFct = &Keypad_Input;
 			
-		/*tasks[2].state = -1;
-		tasks[2].period = 50;   //update somehow
+		tasks[2].state = -1;
+		tasks[2].period = 100;   //update somehow
 		tasks[2].elapsedTime = tasks[2].period;
-		tasks[2].TickFct = &Password_Reset;
+		tasks[2].TickFct = &Password_Verify;
 			
-		tasks[3].state = -1;
+		/*tasks[3].state = -1;
 		tasks[3].period = 50;   //update somehow
 		tasks[3].elapsedTime = tasks[3].period;
 		tasks[3].TickFct = &Lock_Logic;*/

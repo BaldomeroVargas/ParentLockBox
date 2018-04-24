@@ -28,9 +28,14 @@ const unsigned char * menuOptions[6] = {"Lock Item", "Manual Unlock","Status Dis
 
 //Password Reset
 const unsigned char * newPassword = "New password:";
+const unsigned char * successfulChangeTop = "Change complete!";
+const unsigned char * successfulChangeBot = "Password: ";
 const unsigned char * resetComplete = "Password Reset!";
 //System Reset
+const unsigned char * systemResetTop = "Confirm Reset:";
+const unsigned char * systemResetComplete = "Resetting System";
 
+//test
 const unsigned char * child = "Kids";
 const unsigned char * parent = "Parents";
 #endif
