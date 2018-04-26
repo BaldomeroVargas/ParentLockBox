@@ -9,13 +9,19 @@
 
 unsigned char inputCount = 0;
 unsigned char password_Input[4] = {'x', 'x', 'x', 'x'};
-unsigned char locker_one_status = 0;
-unsigned char locker_two_status = 0;
+unsigned char locker_one_status = 1;
+unsigned char locker_two_status = 1;
+unsigned char unlockOne = 0;
+unsigned char unlockTwo = 0;
+unsigned char timeCountdown = 0;
+unsigned char showTime = 0;
 unsigned char incorrect_delay_count = 0;
 unsigned short lock_delay_count = 0;
 unsigned char valid_delay_count = 0;
 unsigned char keypadEntry = '\0';
 unsigned char attempts = 0;
+
+unsigned char displayCount = 0;
 
 unsigned char cursorIndex = 0;
 unsigned char cursorPosition = 0;
@@ -29,6 +35,8 @@ unsigned char checkComplete = 0;
 unsigned char overwriteComplete = 0;
 unsigned char overwriteDelay = 0;
 
+unsigned char childUserWait = 0;
+unsigned char childUserCursor = 0;
 
 //for unlock later
 unsigned char systemResetUnlock = 0;
@@ -62,6 +70,9 @@ void welcome_reset(){
 	lock_delay_count = 0;
 	valid_delay_count = 0;
 	inputCount = 0;
+	timeASeconds = 0;
+	timeBSeconds = 0;
+	//add rest of variables
 	dir = -1;
 	currentDelay = -1;
 	currentuser = -1;
@@ -89,6 +100,32 @@ void system_setup(){
 	eeprom_write_byte((uint8_t*)205, 'x');
 }
 
+void displayTime(signed long time, unsigned char position){
+	
+	unsigned short hours = 0;
+	unsigned short mins = 0;
+	unsigned short sec = 0;
+
+	hours = time / 3600;
+	mins = time % 3600;
+	sec = mins % 60;
+	mins = mins / 60;
+	
+	LCD_Cursor(4 + (position*16));
+	LCD_WriteData((hours / 10) + '0');
+	LCD_Cursor(5 + (position*16));
+	LCD_WriteData((hours % 10) + '0');
+	LCD_Cursor(7 + (position*16));
+	LCD_WriteData((mins / 10) + '0');
+	LCD_Cursor(8 + (position*16));
+	LCD_WriteData((mins % 10) + '0');
+	LCD_Cursor(10 + (position*16));
+	LCD_WriteData((sec / 10) + '0');
+	LCD_Cursor(11 + (position*16));
+	LCD_WriteData((sec % 10) + '0');
+	LCD_Cursor(33);
+}
+
 void menu_start(){
 	valid_delay_count = 0;
 	LCD_ClearScreen();
@@ -110,6 +147,7 @@ enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDela
 		  
 int Menu_Flow(int state)
 {
+	unsigned char inputA = ~PINA;
 	//transitions
 	switch(state)
 	{
@@ -144,9 +182,17 @@ int Menu_Flow(int state)
 				
 			if(keypadEntry == '1'){
 				//child logic
+				state = childUser;
+				showTime = 1;
 				LCD_ClearScreen();
-				LCD_DisplayString(1,child);
-				LCD_Cursor(33);
+				LCD_DisplayString(1, showTimeA);
+				LCD_DisplayString(17, showTimeB);
+				displayTime(timeASeconds, 0);
+				displayTime(timeBSeconds, 1);
+				LCD_Cursor(32);
+				LCD_WriteData('-');
+				LCD_Cursor(16);
+				LCD_WriteData('+');
 				keypadEntry = 'x';
 			}
 			else if(keypadEntry == '2'){
@@ -158,7 +204,6 @@ int Menu_Flow(int state)
 				keypadEntry = 'x';
 				passwordProg = 1;
 				currentuser = initialLogin;
-				
 			}
 			else if(keypadEntry == 'D'){
 				state = welcomeInit;
@@ -167,6 +212,52 @@ int Menu_Flow(int state)
 				state = prelogin;
 			}
 			break;
+			
+			
+		case childUser:
+			if(keypadEntry == 'D' || childUserWait >= 100){
+				childUserWait = 0;
+				showTime = 0;
+				state = prelogin;
+				LCD_ClearScreen();
+				LCD_DisplayString(1,preLoginTop);
+				LCD_DisplayString(17,preLoginBot);
+				LCD_Cursor(33);
+				keypadEntry = 'x';
+				break;
+			}
+			
+			if(keypadEntry == 'C' && childUserCursor < 1){
+				childUserCursor += 1;
+			}
+			else if(keypadEntry == 'A' && childUserCursor > 0){
+				childUserCursor -= 1;
+			}
+			
+			if(inputA & 0x04){
+				if(childUserCursor == 0){
+					if(timeASeconds <= 60){
+						timeASeconds = 0;
+					}
+					else{
+						timeASeconds -= 60;
+					}
+				}
+				else{
+					if(timeBSeconds <= 60){
+						timeBSeconds = 0;
+					}
+					else{
+						timeBSeconds -= 60;
+					}
+				}
+			}
+			
+			childUserWait += 1;
+			
+			LCD_Cursor((childUserCursor + 1) * 16);
+			break;
+			
 			
 		case loginCheck:
 		
@@ -325,9 +416,12 @@ int Menu_Flow(int state)
 						
 					case 2:
 						state = display;
+						showTime = 1;
 						LCD_ClearScreen();
-						LCD_Cursor(1);
-						LCD_WriteData(cursorIndex + 48);
+						LCD_DisplayString(1, showTimeA);
+						LCD_DisplayString(17, showTimeB);
+						displayTime(timeASeconds, 0);
+						displayTime(timeBSeconds, 1);
 						break;
 						
 					case 3:
@@ -364,6 +458,12 @@ int Menu_Flow(int state)
 			break;
 		
 		case display:
+			if(displayCount >= 50){
+				state = mainMenu;
+				menu_start();
+				displayCount = 0;
+				showTime = 0;
+			}
 			break;
 		
 		case passwordReset:
@@ -561,6 +661,7 @@ int Menu_Flow(int state)
 			break;
 			
 		case display:
+			displayCount += 1;
 			break;
 			
 		case passwordReset:
@@ -782,5 +883,94 @@ int Password_Verify(int state)
 	}
 	return state;
 }
+
+enum TimerCount{updateTime, timerDone};
+int Timer_Status(int state)
+{
+	
+	//transitions
+	switch(state)
+	{
+		case -1:
+			state = updateTime;
+			break;
+		
+		case updateTime:
+			
+			if(timeCountdown >= 10){
+				
+				if(locker_one_status){
+					if(timeASeconds <= 0){
+						timeASeconds = 0;
+						unlockOne = 1;
+						state = timerDone;
+					}
+					else{
+						timeASeconds -= 1;
+					}
+				}
+				
+				if(locker_two_status){
+					if(timeBSeconds <= 0){
+						timeBSeconds = 0;
+						unlockTwo = 1;
+						state = timerDone;
+					}
+					else{
+						timeBSeconds -= 1;
+					}
+				}
+				
+				if(showTime){
+					PORTA = 0xFF;
+					displayTime(timeASeconds, 0);
+					displayTime(timeBSeconds, 1);
+				}
+				timeCountdown = 0;
+			}
+			
+			timeCountdown += 1;
+			
+			break;
+		
+		case timerDone:
+			//send via USART here
+			if(unlockOne){
+				//PORTA = 0x01;
+				unlockOne = 0;
+			}
+			
+			if(unlockTwo){
+				//PORTA = 0x02;
+				unlockTwo = 0;
+			}
+			
+			state = updateTime;
+			break;
+			
+		default:
+			state = -1;
+			break;
+	}
+	
+	//actions
+	switch(state)
+	{
+
+		case -1:
+			break;
+		
+		case updateTime:
+			break;
+			
+		case timerDone:
+			break;
+			
+		default:
+			break;
+	}
+	return state;
+}
+
 
 #endif

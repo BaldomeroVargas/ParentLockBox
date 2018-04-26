@@ -35,6 +35,10 @@ const unsigned char * resetComplete = "Password Reset!";
 const unsigned char * systemResetTop = "Confirm Reset:";
 const unsigned char * systemResetComplete = "Resetting System";
 
+//display
+const unsigned char * showTimeA = "1: ";
+const unsigned char * showTimeB = "2: ";
+
 //test
 const unsigned char * child = "Kids";
 const unsigned char * parent = "Parents";
