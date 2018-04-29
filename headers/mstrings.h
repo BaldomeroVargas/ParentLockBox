@@ -39,6 +39,12 @@ const unsigned char * systemResetComplete = "Resetting System";
 const unsigned char * showTimeA = "1: ";
 const unsigned char * showTimeB = "2: ";
 
+//manual unlock
+const unsigned char * mUnlockTop = "1: Lock A";
+const unsigned char * mUnlockBot = "2: Lock B";
+const unsigned char * unlockedManually1 = "Lock ";
+const unsigned char * unlockedManually2 = "Open!";
+
 //test
 const unsigned char * child = "Kids";
 const unsigned char * parent = "Parents";

@@ -41,6 +41,8 @@ unsigned char childUserCursor = 0;
 //for unlock later
 unsigned char systemResetUnlock = 0;
 unsigned char reset_delay_count = 0;
+signed char manual_unlock_choice = -1;
+unsigned char manual_count = 0;
 
 //menu screen
 //LCD_Cursor(((cursorIndex % 2) + 1) * 16);
@@ -70,8 +72,6 @@ void welcome_reset(){
 	lock_delay_count = 0;
 	valid_delay_count = 0;
 	inputCount = 0;
-	timeASeconds = 0;
-	timeBSeconds = 0;
 	//add rest of variables
 	dir = -1;
 	currentDelay = -1;
@@ -142,7 +142,7 @@ void menu_start(){
 }
 
 enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
-		  lockedState, validDelay, mainMenu, lockItem, manualUnlock, display, passwordReset,
+		  lockedState, validDelay, mainMenu, lockItem, manualUnlock, manualUnlockPassword, manualUnlockDelay, display, passwordReset,
 		  newPasswordInput, systemReset, ResetMessageDelay, childUser};
 		  
 int Menu_Flow(int state)
@@ -373,6 +373,21 @@ int Menu_Flow(int state)
 					break;
 					
 				case unlockingManuallyDelay:
+					if(incorrect_delay_count == 5){
+						LCD_ClearScreen();
+						LCD_DisplayString(1, failLogin);
+						LCD_Cursor(33);
+					}
+					else if(incorrect_delay_count >= 20){
+						incorrect_delay_count = 0;
+						passwordProg = 1;
+						state = manualUnlockPassword;
+						currentDelay = -1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1,loginTop);
+						LCD_Cursor(33);
+						keypadEntry = 'x';
+					}
 					break;
 					
 				default:
@@ -410,8 +425,9 @@ int Menu_Flow(int state)
 					case 1:
 						state = manualUnlock;
 						LCD_ClearScreen();
-						LCD_Cursor(1);
-						LCD_WriteData(cursorIndex + 48);
+						LCD_DisplayString(1, mUnlockTop);
+						LCD_DisplayString(17, mUnlockBot);
+						LCD_Cursor(33);
 						break;
 						
 					case 2:
@@ -455,6 +471,100 @@ int Menu_Flow(int state)
 			break;
 		
 		case manualUnlock:
+			if(keypadEntry == '1'){
+				state = manualUnlockPassword;
+				manual_unlock_choice = 0;
+				currentuser = unlockingManually;
+				passwordProg = 1;
+				LCD_ClearScreen();
+				LCD_DisplayString(1,loginTop);
+				LCD_Cursor(33);
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == '2'){
+				state = manualUnlockPassword;
+				manual_unlock_choice = 1;
+				currentuser = unlockingManually;
+				passwordProg = 1;
+				LCD_ClearScreen();
+				LCD_DisplayString(1,loginTop);
+				LCD_Cursor(33);
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == 'D'){
+				state = mainMenu;
+				menu_start();
+			}
+			else{
+				state = manualUnlock;
+			}
+			keypadEntry = 'x';
+			break;
+			
+		case manualUnlockPassword:
+		
+			if(!passwordProg && checkComplete && passwordCorrect){
+				passwordProg = 0;
+				passwordCorrect = 0;
+				attempts = 0;
+				if(manual_unlock_choice == 0){
+					timeASeconds = 0;					
+				}
+				else{
+					timeBSeconds = 0;					
+				}
+				
+				state = manualUnlockDelay;
+
+			}
+			else if(!passwordProg && checkComplete && !passwordCorrect){
+				attempts += 1;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				if(attempts >= 3){
+					state = mainMenu;
+					currentuser = -1;
+					dir = -1;
+					menu_start();
+					attempts = 0;
+				}
+				else{
+					state = incorrectDelay;
+					currentDelay = unlockingManuallyDelay;
+				}
+			}
+			else{
+				state = manualUnlockPassword;
+			}
+			
+			if(dir == menuRet){
+				currentuser = -1;
+				dir = -1;
+				menu_start();
+				state = mainMenu;
+				LCD_Cursor(33);
+			}
+			
+			break;
+			
+		
+		case manualUnlockDelay:
+		
+			if(manual_count == 5){
+				//add a delay
+				LCD_ClearScreen();
+				LCD_DisplayString(1, unlockedManually1);
+				LCD_Cursor(6);
+				LCD_WriteData('A'+ manual_unlock_choice);
+				LCD_DisplayString(8, unlockedManually2);
+				LCD_Cursor(33);
+				manual_unlock_choice = -1;
+			}
+			else if(manual_count == 20){
+				menu_start();
+				state = mainMenu;
+				manual_count = 0;
+			}
 			break;
 		
 		case display:
@@ -521,6 +631,8 @@ int Menu_Flow(int state)
 				passwordProg = 0;
 				passwordCorrect = 0;
 				attempts = 0;
+				timeASeconds = 0;
+				timeBSeconds = 0;
 				state = ResetMessageDelay;
 
 			}
@@ -564,9 +676,8 @@ int Menu_Flow(int state)
 				state = setup;
 				reset_delay_count = 0;
 			}
-			break;		
-		
 			break;
+		
 		
 		default:
 			state = -1;
@@ -658,6 +769,13 @@ int Menu_Flow(int state)
 			break;
 			
 		case manualUnlock:
+			break;
+			
+		case manualUnlockPassword:
+			break;
+			
+		case manualUnlockDelay:
+			manual_count += 1;
 			break;
 			
 		case display:
@@ -849,7 +967,7 @@ int Password_Verify(int state)
 						break;
 						
 					case unlockingManually:
-						//TODO
+						dir = menuRet;
 						break;
 						
 					default:
@@ -898,7 +1016,6 @@ int Timer_Status(int state)
 		case updateTime:
 			
 			if(timeCountdown >= 10){
-				
 				if(locker_one_status){
 					if(timeASeconds <= 0){
 						timeASeconds = 0;
@@ -907,6 +1024,7 @@ int Timer_Status(int state)
 					}
 					else{
 						timeASeconds -= 1;
+						PORTA = 0x02;
 					}
 				}
 				
@@ -922,7 +1040,6 @@ int Timer_Status(int state)
 				}
 				
 				if(showTime){
-					PORTA = 0xFF;
 					displayTime(timeASeconds, 0);
 					displayTime(timeBSeconds, 1);
 				}
