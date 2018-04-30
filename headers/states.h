@@ -9,20 +9,26 @@
 
 unsigned char inputCount = 0;
 unsigned char password_Input[4] = {'x', 'x', 'x', 'x'};
+unsigned char time_Input[5] = {'x','x',':','x','x'};
 unsigned char locker_one_status = 1;
 unsigned char locker_two_status = 1;
 unsigned char unlockOne = 0;
 unsigned char unlockTwo = 0;
-unsigned char timeCountdown = 0;
 unsigned char showTime = 0;
-unsigned char incorrect_delay_count = 0;
-unsigned short lock_delay_count = 0;
-unsigned char valid_delay_count = 0;
 unsigned char keypadEntry = '\0';
 unsigned char attempts = 0;
 
+//delays/ counts
+unsigned char incorrect_delay_count = 0;
+unsigned short lock_delay_count = 0;
+unsigned char valid_delay_count = 0;
 unsigned char displayCount = 0;
+unsigned char timeCountdown = 0;
+unsigned char reset_delay_count = 0;
+unsigned char unlock1_count = 0;
+unsigned char unlock2_count = 0;
 
+//LCD related
 unsigned char cursorIndex = 0;
 unsigned char cursorPosition = 0;
 
@@ -31,26 +37,25 @@ unsigned char passwordProg = 0;
 unsigned char passwordComplete = 0;
 unsigned char passwordCorrect = 0;
 unsigned char checkComplete = 0;
-
 unsigned char overwriteComplete = 0;
 unsigned char overwriteDelay = 0;
 
+//child user flags
 unsigned char childUserWait = 0;
 unsigned char childUserCursor = 0;
 
-//for unlock later
+//manual unlock/ system reset flags
 unsigned char systemResetUnlock = 0;
-unsigned char reset_delay_count = 0;
 signed char manual_unlock_choice = -1;
 unsigned char manual_count = 0;
+signed char lock_choice = -1;
+unsigned char time_position_count = 0;
+unsigned char lockItem_count = 0;
 
-//menu screen
-//LCD_Cursor(((cursorIndex % 2) + 1) * 16);
-
-enum inputUser{initialLogin, resettingSystem, resettingPassword, unlockingManually};
+enum inputUser{initialLogin, lockingItem, resettingSystem, resettingPassword, unlockingManually};
 enum inputUser currentuser = -1;
 
-enum delayUser{initialDelay, resettingSystemDelay, resettingPasswordDelay, unlockingManuallyDelay};
+enum delayUser{initialDelay, lockingItemDelay, resettingSystemDelay, resettingPasswordDelay, unlockingManuallyDelay};
 enum delayUser currentDelay = -1;
 
 enum returnDirection{userPromptRet, menuRet};
@@ -142,7 +147,8 @@ void menu_start(){
 }
 
 enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
-		  lockedState, validDelay, mainMenu, lockItem, manualUnlock, manualUnlockPassword, manualUnlockDelay, display, passwordReset,
+		  lockedState, validDelay, mainMenu, itemLock, itemLockMenu, itemLockSetTime, itemLockLogic,
+		  manualUnlock, manualUnlockPassword, manualUnlockDelay, display, passwordReset,
 		  newPasswordInput, systemReset, ResetMessageDelay, childUser};
 		  
 int Menu_Flow(int state)
@@ -336,6 +342,24 @@ int Menu_Flow(int state)
 					}
 					break;
 					
+				case lockingItemDelay:
+					if(incorrect_delay_count == 5){
+						LCD_ClearScreen();
+						LCD_DisplayString(1, failLogin);
+						LCD_Cursor(33);
+					}
+					else if(incorrect_delay_count >= 20){
+						incorrect_delay_count = 0;
+						passwordProg = 1;
+						state = itemLock;
+						currentDelay = -1;
+						LCD_ClearScreen();
+						LCD_DisplayString(1, loginTop);
+						LCD_Cursor(33);
+						keypadEntry = 'x';
+					}
+					break;
+					
 				case resettingSystemDelay:
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
@@ -416,10 +440,12 @@ int Menu_Flow(int state)
 				switch (cursorIndex)
 				{
 					case 0:
-						state = lockItem;
+						state = itemLock;
 						LCD_ClearScreen();
-						LCD_Cursor(1);
-						LCD_WriteData(cursorIndex + 48);
+						LCD_DisplayString(1, loginTop);
+						LCD_Cursor(33);
+						passwordProg = 1;
+						currentuser = lockingItem;
 						break;
 						
 					case 1:
@@ -467,7 +493,128 @@ int Menu_Flow(int state)
 			}
 			break;
 			
-		case lockItem:
+		case itemLock:
+			if(!passwordProg && checkComplete && passwordCorrect){
+				LCD_ClearScreen();
+				LCD_DisplayString(1, newPassword);
+				LCD_Cursor(33);
+				passwordProg = 0;
+				passwordCorrect = 0;
+				attempts = 0;
+				state = itemLockMenu;
+				LCD_ClearScreen();
+				LCD_DisplayString(1, mUnlockTop);
+				LCD_DisplayString(17, mUnlockBot);
+				LCD_Cursor(33);
+			}
+			else if(!passwordProg && checkComplete && !passwordCorrect){
+				attempts += 1;
+				passwordProg = 0;
+				passwordCorrect = 0;
+				if(attempts >= 3){
+					state = mainMenu;
+					currentuser = -1;
+					dir = -1;
+					menu_start();
+					attempts = 0;
+				}
+				else{
+					state = incorrectDelay;
+					currentDelay = lockingItemDelay;
+				}
+			}
+			else{
+				state = itemLock;
+			}
+			
+			if(dir == menuRet){
+				currentuser = -1;
+				dir = -1;
+				menu_start();
+				state = mainMenu;
+				LCD_Cursor(33);
+			}
+			break;
+			
+		case itemLockMenu:
+			if(keypadEntry == '1'){
+				state = itemLockSetTime;
+				lock_choice = 0;
+				LCD_ClearScreen();
+				LCD_DisplayString(1, timePromptTop);
+				LCD_Cursor(6);
+				LCD_WriteData('A');
+				LCD_DisplayString(17, timePromptBot);
+				LCD_Cursor(17);
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == '2'){
+				state = itemLockSetTime;
+				lock_choice = 1;
+				LCD_ClearScreen();
+				LCD_DisplayString(1, timePromptTop);
+				LCD_Cursor(6);
+				LCD_WriteData('B');
+				LCD_DisplayString(17, timePromptBot);
+				LCD_Cursor(17);
+				keypadEntry = 'x';
+			}
+			else if(keypadEntry == 'D'){
+				state = mainMenu;
+				menu_start();
+			}
+			else{
+				state = itemLockMenu;
+			}
+			keypadEntry = 'x';
+			break;
+			
+		case itemLockSetTime:
+			//confirm case
+			if(time_position_count >= 5){
+				if(keypadEntry == '*'){
+					LCD_ClearScreen();
+					LCD_DisplayString(1, lockDelayPrompt);
+					LCD_Cursor(6);
+					state = itemLockLogic;
+					if(lock_choice == 0){
+						/*LCD_Cursor(1);
+						LCD_WriteData(time_Input[0]);
+						LCD_Cursor(2);
+						LCD_WriteData(time_Input[1]);
+						LCD_Cursor(3);
+						LCD_WriteData(time_Input[3]);
+						LCD_Cursor(4);
+						LCD_WriteData(time_Input[4]);*/
+						timeASeconds = 0;
+						LCD_WriteData('A');
+					}
+					else{
+						timeBSeconds = 0;
+						LCD_WriteData('B');
+					}
+					LCD_Cursor(33);
+					state = itemLockLogic;
+				}
+			}
+			break;
+
+		case itemLockLogic:
+			if(lockItem_count >= 55){
+				if(lock_choice == 0){
+					timeASeconds = ((time_Input[4] - '0') + (10 * (time_Input[3] - '0')) + 
+					(60 * (time_Input[1] - '0')) + (600 * (time_Input[0] - '0'))) * 60;
+					locker_one_status = 1;
+				}
+				else{
+					timeBSeconds = ((time_Input[4] - '0') + (10 * (time_Input[3] - '0')) +
+					(60 * (time_Input[1] - '0')) + (600 * (time_Input[0] - '0'))) * 60;		
+					locker_two_status = 1;
+				}	
+				lock_choice = -1;
+				menu_start();
+				state = mainMenu;		
+			}
 			break;
 		
 		case manualUnlock:
@@ -479,7 +626,6 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1,loginTop);
 				LCD_Cursor(33);
-				keypadEntry = 'x';
 			}
 			else if(keypadEntry == '2'){
 				state = manualUnlockPassword;
@@ -489,7 +635,6 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1,loginTop);
 				LCD_Cursor(33);
-				keypadEntry = 'x';
 			}
 			else if(keypadEntry == 'D'){
 				state = mainMenu;
@@ -765,7 +910,89 @@ int Menu_Flow(int state)
 			LCD_Cursor(((cursorPosition % 2) + 1) * 16);
 			break;
 		
-		case lockItem:
+		case itemLock:
+			break;
+			
+		case itemLockMenu:
+			break;	
+			
+		case itemLockSetTime:
+		
+			//clear case
+			if(keypadEntry == 'D'){
+				if(time_position_count == 0){
+					state = itemLockMenu;
+					LCD_ClearScreen();
+					LCD_DisplayString(1, mUnlockTop);
+					LCD_DisplayString(17, mUnlockBot);
+					LCD_Cursor(33);
+					keypadEntry = 'x';
+					break;
+				}
+				else if(time_position_count >= 5){
+					for(unsigned char i = 7; i < 15; ++i){
+						LCD_Cursor(17 + i);
+						LCD_WriteData(' ');
+					}
+					time_position_count -= 1;
+				}
+				else{
+					if(time_position_count == 3){
+						time_Input[time_position_count] = '#';
+						LCD_Cursor(time_position_count + 17);
+						LCD_WriteData('#');
+						time_position_count -= 2;
+					}
+					else{
+						time_Input[time_position_count] = '#';
+						LCD_Cursor(time_position_count + 17);
+						LCD_WriteData('#');
+						time_position_count -= 1;
+					}
+				}
+				LCD_Cursor(17 + time_position_count);
+			}
+		
+			//confirm case
+			if(time_position_count >= 5){
+				LCD_DisplayString(24, timeComfirm);
+				LCD_Cursor(33);
+			}
+			//enter case
+			else{
+				if(keypadEntry >= '0' && keypadEntry <= '9'){
+					//cases for mins
+					if(time_position_count == 1){
+						LCD_Cursor(time_position_count + 17);
+						time_Input[time_position_count] = keypadEntry;
+						LCD_WriteData(keypadEntry);
+						time_position_count += 2;
+					}
+					else if(time_position_count == 3){
+						if(keypadEntry <= '5'){
+							LCD_Cursor(time_position_count + 17);
+							time_Input[time_position_count] = keypadEntry;
+							LCD_WriteData(keypadEntry);
+							time_position_count += 1;
+						}
+					}
+					else{
+						LCD_Cursor(time_position_count + 17);
+						time_Input[time_position_count] = keypadEntry;
+						LCD_WriteData(keypadEntry);
+						//write to array
+						time_position_count += 1;
+					}
+					LCD_Cursor(17 + time_position_count);
+				}		
+			}
+			
+			keypadEntry = 'x';
+
+			break;
+			
+		case itemLockLogic:
+			lockItem_count += 1;
 			break;
 			
 		case manualUnlock:
@@ -970,6 +1197,10 @@ int Password_Verify(int state)
 						dir = menuRet;
 						break;
 						
+					case lockingItem:
+						dir = menuRet;
+						break;
+						
 					default:
 						//TODO
 						break;
@@ -1020,11 +1251,11 @@ int Timer_Status(int state)
 					if(timeASeconds <= 0){
 						timeASeconds = 0;
 						unlockOne = 1;
+						PORTA = PORTA | 0x01;
 						state = timerDone;
 					}
 					else{
 						timeASeconds -= 1;
-						PORTA = 0x02;
 					}
 				}
 				
@@ -1032,6 +1263,7 @@ int Timer_Status(int state)
 					if(timeBSeconds <= 0){
 						timeBSeconds = 0;
 						unlockTwo = 1;
+						PORTA = PORTA | 0x02;
 						state = timerDone;
 					}
 					else{
@@ -1051,18 +1283,35 @@ int Timer_Status(int state)
 			break;
 		
 		case timerDone:
+			//add a 3 second delay here
 			//send via USART here
 			if(unlockOne){
-				//PORTA = 0x01;
-				unlockOne = 0;
+				if(unlock1_count >= 50){
+					PORTA = PORTA & 0xFE;
+					unlockOne = 0;
+					locker_one_status = 0;
+					state = updateTime;
+				}
+				else{
+					unlock1_count += 1;
+					state = timerDone;
+				}
 			}
 			
 			if(unlockTwo){
-				//PORTA = 0x02;
-				unlockTwo = 0;
+				if(unlock2_count >= 50){
+					PORTA = PORTA & 0xFD;
+					unlockTwo = 0;
+					locker_two_status = 0;
+					state = updateTime;
+				}
+				else{
+					unlock2_count += 1;
+					state = timerDone;
+				}
+
 			}
 			
-			state = updateTime;
 			break;
 			
 		default:
