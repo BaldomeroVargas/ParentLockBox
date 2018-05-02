@@ -12,8 +12,8 @@ time B stored at 200-203
 unsigned char password[4] = {'0', '0', '0', '0'};
 unsigned char timeA[6] = {'x','x','x','x','0','0'};
 unsigned char timeB[6] = {'x','x','x','x','0','0'};
-signed long timeASeconds = 100;
-signed long timeBSeconds = 300;
+long timeASeconds = 100;
+long timeBSeconds = 36050;
 
 void retrieve_all_memory(){
 	password[0] = eeprom_read_byte((uint8_t*)75);

@@ -43,6 +43,7 @@ unsigned char overwriteDelay = 0;
 //child user flags
 unsigned char childUserWait = 0;
 unsigned char childUserCursor = 0;
+unsigned char inputPolling = 0;
 
 //manual unlock/ system reset flags
 unsigned char systemResetUnlock = 0;
@@ -105,11 +106,11 @@ void system_setup(){
 	eeprom_write_byte((uint8_t*)205, 'x');
 }
 
-void displayTime(signed long time, unsigned char position){
+void displayTime(long time, unsigned char position){
 	
-	unsigned short hours = 0;
-	unsigned short mins = 0;
-	unsigned short sec = 0;
+	long hours = 0;
+	long mins = 0;
+	long sec = 0;
 
 	hours = time / 3600;
 	mins = time % 3600;
@@ -240,23 +241,32 @@ int Menu_Flow(int state)
 				childUserCursor -= 1;
 			}
 			
-			if(inputA & 0x04){
-				if(childUserCursor == 0){
-					if(timeASeconds <= 60){
-						timeASeconds = 0;
+			//temporary solution 
+			//need to fix polling post demo
+			
+			if(inputPolling >= 1){
+				inputPolling = 0;
+				if(inputA & 0x04){
+					if(childUserCursor == 0){
+						if(timeASeconds <= 60){
+							timeASeconds = 0;
+						}
+						else{
+							timeASeconds -= 60;
+						}
 					}
 					else{
-						timeASeconds -= 60;
+						if(timeBSeconds <= 60){
+							timeBSeconds = 0;
+						}
+						else{
+							timeBSeconds -= 60;
+						}
 					}
 				}
-				else{
-					if(timeBSeconds <= 60){
-						timeBSeconds = 0;
-					}
-					else{
-						timeBSeconds -= 60;
-					}
-				}
+			}
+			else{
+				inputPolling += 1;
 			}
 			
 			childUserWait += 1;
@@ -576,41 +586,36 @@ int Menu_Flow(int state)
 					LCD_ClearScreen();
 					LCD_DisplayString(1, lockDelayPrompt);
 					LCD_Cursor(6);
-					state = itemLockLogic;
 					if(lock_choice == 0){
-						/*LCD_Cursor(1);
-						LCD_WriteData(time_Input[0]);
-						LCD_Cursor(2);
-						LCD_WriteData(time_Input[1]);
-						LCD_Cursor(3);
-						LCD_WriteData(time_Input[3]);
-						LCD_Cursor(4);
-						LCD_WriteData(time_Input[4]);*/
+						locker_one_status = 1;
 						timeASeconds = 0;
 						LCD_WriteData('A');
 					}
 					else{
+						locker_two_status = 1;
 						timeBSeconds = 0;
 						LCD_WriteData('B');
 					}
 					LCD_Cursor(33);
+					time_position_count = 0;
 					state = itemLockLogic;
 				}
 			}
 			break;
 
 		case itemLockLogic:
-			if(lockItem_count >= 55){
+			if(lockItem_count >= 70){
 				if(lock_choice == 0){
-					timeASeconds = ((time_Input[4] - '0') + (10 * (time_Input[3] - '0')) + 
-					(60 * (time_Input[1] - '0')) + (600 * (time_Input[0] - '0'))) * 60;
+					timeASeconds = ((long)(time_Input[4] - '0') + (long)(10 * (time_Input[3] - '0')) + 
+					(long)(60 * (time_Input[1] - '0')) + (long)(600 * (time_Input[0] - '0'))) * 60;
 					locker_one_status = 1;
 				}
 				else{
-					timeBSeconds = ((time_Input[4] - '0') + (10 * (time_Input[3] - '0')) +
-					(60 * (time_Input[1] - '0')) + (600 * (time_Input[0] - '0'))) * 60;		
+					timeBSeconds = ((long)(time_Input[4] - '0') + (long)(10 * (time_Input[3] - '0')) +
+					(long)(60 * (time_Input[1] - '0')) + (long)(600 * (time_Input[0] - '0'))) * 60;
 					locker_two_status = 1;
 				}	
+				lockItem_count = 0;
 				lock_choice = -1;
 				menu_start();
 				state = mainMenu;		
@@ -778,6 +783,7 @@ int Menu_Flow(int state)
 				attempts = 0;
 				timeASeconds = 0;
 				timeBSeconds = 0;
+				//might be a problem with the locks here
 				state = ResetMessageDelay;
 
 			}
@@ -817,7 +823,7 @@ int Menu_Flow(int state)
 				LCD_DisplayString(1, systemResetComplete);
 				LCD_Cursor(33);
 			}
-			else if(reset_delay_count == 20){
+			else if(reset_delay_count == 55){
 				state = setup;
 				reset_delay_count = 0;
 			}
@@ -1286,9 +1292,10 @@ int Timer_Status(int state)
 			//add a 3 second delay here
 			//send via USART here
 			if(unlockOne){
-				if(unlock1_count >= 50){
+				if(unlock1_count >= 40){
 					PORTA = PORTA & 0xFE;
 					unlockOne = 0;
+					unlock1_count = 0;
 					locker_one_status = 0;
 					state = updateTime;
 				}
@@ -1299,9 +1306,10 @@ int Timer_Status(int state)
 			}
 			
 			if(unlockTwo){
-				if(unlock2_count >= 50){
+				if(unlock2_count >= 40){
 					PORTA = PORTA & 0xFD;
 					unlockTwo = 0;
+					unlock2_count = 0;
 					locker_two_status = 0;
 					state = updateTime;
 				}
