@@ -1,13 +1,13 @@
 #ifndef MSTRINGS_H
 #define MSTRINGS_H
 
+//welcome prompts
 const unsigned char * welcomeTop = "Welcome! :)";
 const unsigned char * welcomeBot = "Hit * to start";
-
 const unsigned char * preLoginTop = "1:Child 2:Parent";
 const unsigned char * preLoginBot = "Hit < to quit";
 
-//parent path
+//password verification
 const unsigned char * loginTop = "Enter password:";
 const unsigned char * failLogin = "Try again";
 const unsigned char * successLogin = "Correct login!";
@@ -40,8 +40,10 @@ const unsigned char * unlockedManually2 = "Open!";
 //locking item
 const unsigned char * timePromptBot = "HH:MM";
 const unsigned char * lockDelayPrompt = "Lock x Open";
+
 //overwrite position 6 with locker selection
 const unsigned char * timePromptTop = "Lock X Time";
+
 //start at char position 7
 const unsigned char * timeComfirm = "* to Set";
 

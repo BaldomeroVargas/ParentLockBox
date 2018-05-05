@@ -7,9 +7,10 @@
 #include "mstrings.h"
 #include "memory.h"
 
-unsigned char inputCount = 0;
 unsigned char password_Input[4] = {'x', 'x', 'x', 'x'};
 unsigned char time_Input[5] = {'x','x',':','x','x'};
+
+//locker related
 unsigned char locker_one_status = 1;
 unsigned char locker_two_status = 1;
 unsigned char unlockOne = 0;
@@ -18,7 +19,8 @@ unsigned char showTime = 0;
 unsigned char keypadEntry = '\0';
 unsigned char attempts = 0;
 
-//delays/ counts
+//delays counts
+unsigned char inputCount = 0;
 unsigned char incorrect_delay_count = 0;
 unsigned short lock_delay_count = 0;
 unsigned char valid_delay_count = 0;
@@ -45,7 +47,7 @@ unsigned char childUserWait = 0;
 unsigned char childUserCursor = 0;
 unsigned char inputPolling = 0;
 
-//manual unlock/ system reset flags
+//manual unlock/system reset flags
 unsigned char systemResetUnlock = 0;
 signed char manual_unlock_choice = -1;
 unsigned char manual_count = 0;
@@ -53,12 +55,15 @@ signed char lock_choice = -1;
 unsigned char time_position_count = 0;
 unsigned char lockItem_count = 0;
 
+//used to return to proper state after password input
 enum inputUser{initialLogin, lockingItem, resettingSystem, resettingPassword, unlockingManually};
 enum inputUser currentuser = -1;
 
+//used to map delay messages
 enum delayUser{initialDelay, lockingItemDelay, resettingSystemDelay, resettingPasswordDelay, unlockingManuallyDelay};
 enum delayUser currentDelay = -1;
 
+//used to map return
 enum returnDirection{userPromptRet, menuRet};
 enum returnDirection dir = -1;
 
@@ -84,7 +89,6 @@ void welcome_reset(){
 	currentuser = -1;
 }
 
-//ran on system reset or initialization
 void system_setup(){
 	eeprom_write_byte((uint8_t*)75, '0');
 	eeprom_write_byte((uint8_t*)76, '0');
@@ -147,11 +151,11 @@ void menu_start(){
 	keypadEntry = 'x';	
 }
 
+//handling overall menu flow of project
 enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
 		  lockedState, validDelay, mainMenu, itemLock, itemLockMenu, itemLockSetTime, itemLockLogic,
 		  manualUnlock, manualUnlockPassword, manualUnlockDelay, display, passwordReset,
-		  newPasswordInput, systemReset, ResetMessageDelay, childUser};
-		  
+		  newPasswordInput, systemReset, ResetMessageDelay, childUser};		  
 int Menu_Flow(int state)
 {
 	unsigned char inputA = ~PINA;
@@ -222,6 +226,7 @@ int Menu_Flow(int state)
 			
 			
 		case childUser:
+			//return to welcome
 			if(keypadEntry == 'D' || childUserWait >= 100){
 				childUserWait = 0;
 				showTime = 0;
@@ -241,9 +246,7 @@ int Menu_Flow(int state)
 				childUserCursor -= 1;
 			}
 			
-			//temporary solution 
-			//need to fix polling post demo
-			
+			//reward system logic
 			if(inputPolling >= 1){
 				inputPolling = 0;
 				if(inputA & 0x04){
@@ -330,6 +333,7 @@ int Menu_Flow(int state)
 		
 		case incorrectDelay:
 		
+			//mapped to save lines of code
 			switch(currentDelay){
 				case -1:
 					break;
@@ -427,7 +431,7 @@ int Menu_Flow(int state)
 				default:
 					break;
 			}
-			//slight transition delay
+			
 			break;
 			
 		case validDelay:
@@ -604,6 +608,7 @@ int Menu_Flow(int state)
 			break;
 
 		case itemLockLogic:
+			//set new time after confirmation
 			if(lockItem_count >= 70){
 				if(lock_choice == 0){
 					timeASeconds = ((long)(time_Input[4] - '0') + (long)(10 * (time_Input[3] - '0')) + 
@@ -783,7 +788,6 @@ int Menu_Flow(int state)
 				attempts = 0;
 				timeASeconds = 0;
 				timeBSeconds = 0;
-				//might be a problem with the locks here
 				state = ResetMessageDelay;
 
 			}
@@ -874,6 +878,7 @@ int Menu_Flow(int state)
 			break;
 		
 		case mainMenu:
+			//handling cursor position and menu output
 			PORTD = (cursorPosition << 5) | cursorIndex;
 			if(keypadEntry == 'A'){
 				if(cursorIndex > 0){
@@ -1179,7 +1184,6 @@ int Password_Verify(int state)
 				keypadEntry = 'x';
 			}
 			else if(keypadEntry == 'D'){
-				//handle all cases where this is used
 				inputCount = 0;
 				passwordProg = 0;
 				state = idle;
@@ -1289,8 +1293,6 @@ int Timer_Status(int state)
 			break;
 		
 		case timerDone:
-			//add a 3 second delay here
-			//send via USART here
 			if(unlockOne){
 				if(unlock1_count >= 40){
 					PORTA = PORTA & 0xFE;

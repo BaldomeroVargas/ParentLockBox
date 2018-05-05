@@ -12,6 +12,8 @@ time B stored at 200-203
 unsigned char password[4] = {'0', '0', '0', '0'};
 unsigned char timeA[6] = {'x','x','x','x','0','0'};
 unsigned char timeB[6] = {'x','x','x','x','0','0'};
+
+//set for demo V1
 long timeASeconds = 100;
 long timeBSeconds = 36050;
 
