@@ -1,6 +1,6 @@
 # CS179J Project
 
-##Developed in UCR 179J
+## Developed in UCR 179J
 
 main.c: setup for state machines
 
@@ -11,7 +11,7 @@ memory.h: hold some functions to access memory
 mstrings.h: Holds strings output to LCD 
 
 
-##The following files where provided by the ECE department at UCR (given in CS120B/CS122A):
+## The following files where provided by the ECE department at UCR (given in CS120B/CS122A):
 
 bit.h, keypad.h, scheduler.h, usart_ATmega1284.h
 
