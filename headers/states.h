@@ -89,27 +89,6 @@ void welcome_reset(){
 	currentuser = -1;
 }
 
-void system_setup(){
-	eeprom_write_byte((uint8_t*)75, '0');
-	eeprom_write_byte((uint8_t*)76, '0');
-	eeprom_write_byte((uint8_t*)77, '0');
-	eeprom_write_byte((uint8_t*)78, '0');
-	
-	eeprom_write_byte((uint8_t*)100, 'x');
-	eeprom_write_byte((uint8_t*)101, 'x');
-	eeprom_write_byte((uint8_t*)102, 'x');
-	eeprom_write_byte((uint8_t*)103, 'x');	
-	eeprom_write_byte((uint8_t*)104, 'x');
-	eeprom_write_byte((uint8_t*)105, 'x');
-	
-	eeprom_write_byte((uint8_t*)200, 'x');
-	eeprom_write_byte((uint8_t*)201, 'x');
-	eeprom_write_byte((uint8_t*)202, 'x');
-	eeprom_write_byte((uint8_t*)203, 'x');
-	eeprom_write_byte((uint8_t*)204, 'x');
-	eeprom_write_byte((uint8_t*)205, 'x');
-}
-
 void displayTime(long time, unsigned char position){
 	
 	long hours = 0;
@@ -152,10 +131,11 @@ void menu_start(){
 }
 
 //handling overall menu flow of project
-enum Menu{setup, welcomeInit, welcomeToggle, prelogin, loginCheck, incorrectDelay, 
+enum Menu{setup, welcomeInit, welcomeToggle, prelogin, childUser, display, loginCheck, incorrectDelay, 
 		  lockedState, validDelay, mainMenu, itemLock, itemLockMenu, itemLockSetTime, itemLockLogic,
-		  manualUnlock, manualUnlockPassword, manualUnlockDelay, display, passwordReset,
-		  newPasswordInput, systemReset, ResetMessageDelay, childUser};		  
+		  manualUnlock, manualUnlockPassword, manualUnlockDelay, passwordReset,
+		  newPasswordInput, systemReset, ResetMessageDelay};	
+		  	  
 int Menu_Flow(int state)
 {
 	unsigned char inputA = ~PINA;
@@ -1062,6 +1042,16 @@ int Menu_Flow(int state)
 		default:
 			break;
 	}
+
+
+	//integration v1	
+	if(state < 10){
+		PORTA = PORTA | 0x80;
+	}
+	else{
+		PORTA = PORTA & 0x7F;
+	}
+	
 	return state;
 }
 
@@ -1094,7 +1084,6 @@ int Keypad_Input(int state)
 			}
 			break;
 			
-		
 		default:
 			state = -1;
 			break;
@@ -1103,18 +1092,10 @@ int Keypad_Input(int state)
 	//actions
 	switch(state)
 	{
-
-		case -1:
-			break;
-		
-		case toggle:
-			break;
-		
-		case press:
-			break;	
-		
-		default:
-			break;
+		case -1: break;
+		case toggle: break;
+		case press: break;	
+		default: break;
 	}
 	return state;
 }
@@ -1332,21 +1313,12 @@ int Timer_Status(int state)
 	//actions
 	switch(state)
 	{
-
-		case -1:
-			break;
-		
-		case updateTime:
-			break;
-			
-		case timerDone:
-			break;
-			
-		default:
-			break;
+		case -1: break;
+		case updateTime:break;
+		case timerDone: break;
+		default: break;
 	}
 	return state;
 }
-
 
 #endif

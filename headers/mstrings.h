@@ -47,8 +47,4 @@ const unsigned char * timePromptTop = "Lock X Time";
 //start at char position 7
 const unsigned char * timeComfirm = "* to Set";
 
-//test
-const unsigned char * child = "Kids";
-const unsigned char * parent = "Parents";
-const unsigned char * logic = "Logic";
 #endif

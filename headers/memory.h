@@ -17,6 +17,27 @@ unsigned char timeB[6] = {'x','x','x','x','0','0'};
 long timeASeconds = 100;
 long timeBSeconds = 36050;
 
+void system_setup(){
+	eeprom_write_byte((uint8_t*)75, '0');
+	eeprom_write_byte((uint8_t*)76, '0');
+	eeprom_write_byte((uint8_t*)77, '0');
+	eeprom_write_byte((uint8_t*)78, '0');
+	
+	eeprom_write_byte((uint8_t*)100, 'x');
+	eeprom_write_byte((uint8_t*)101, 'x');
+	eeprom_write_byte((uint8_t*)102, 'x');
+	eeprom_write_byte((uint8_t*)103, 'x');
+	eeprom_write_byte((uint8_t*)104, 'x');
+	eeprom_write_byte((uint8_t*)105, 'x');
+	
+	eeprom_write_byte((uint8_t*)200, 'x');
+	eeprom_write_byte((uint8_t*)201, 'x');
+	eeprom_write_byte((uint8_t*)202, 'x');
+	eeprom_write_byte((uint8_t*)203, 'x');
+	eeprom_write_byte((uint8_t*)204, 'x');
+	eeprom_write_byte((uint8_t*)205, 'x');
+}
+
 void retrieve_all_memory(){
 	password[0] = eeprom_read_byte((uint8_t*)75);
 	password[1] = eeprom_read_byte((uint8_t*)76);
