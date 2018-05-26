@@ -134,26 +134,16 @@ void menu_start(){
 enum Menu{setup, welcomeInit, welcomeToggle, prelogin, childUser, display, loginCheck, incorrectDelay, 
 		  lockedState, validDelay, mainMenu, itemLock, itemLockMenu, itemLockSetTime, itemLockLogic,
 		  manualUnlock, manualUnlockPassword, manualUnlockDelay, passwordReset,
-		  newPasswordInput, systemReset, ResetMessageDelay};	
-		  	  
+		  newPasswordInput, systemReset, ResetMessageDelay};			  	  
 int Menu_Flow(int state)
 {
 	unsigned char inputA = ~PINA;
 	//transitions
 	switch(state)
 	{
-		case -1:
-			state = setup;
-			break;
-		
-		case setup:
-			state = welcomeInit;
-			break;
-			
-		case welcomeInit:
-			state = welcomeToggle;
-			welcome_reset();
-			break;
+		case -1: state = setup; break;
+		case setup: state = welcomeInit; break;
+		case welcomeInit: state = welcomeToggle; welcome_reset(); break;
 		
 		case welcomeToggle:
 			if(keypadEntry == '*'){
@@ -227,24 +217,15 @@ int Menu_Flow(int state)
 			}
 			
 			//reward system logic
+			//could reduce lines here with ternary
 			if(inputPolling >= 1){
 				inputPolling = 0;
 				if(inputA & 0x04){
 					if(childUserCursor == 0){
-						if(timeASeconds <= 60){
-							timeASeconds = 0;
-						}
-						else{
-							timeASeconds -= 60;
-						}
+						timeASeconds = (timeASeconds <= 60) ? 0 : (timeASeconds - 60);
 					}
 					else{
-						if(timeBSeconds <= 60){
-							timeBSeconds = 0;
-						}
-						else{
-							timeBSeconds -= 60;
-						}
+						timeBSeconds = (timeBSeconds <= 60) ? 0 : (timeBSeconds - 60);
 					}
 				}
 			}
@@ -253,10 +234,8 @@ int Menu_Flow(int state)
 			}
 			
 			childUserWait += 1;
-			
 			LCD_Cursor((childUserCursor + 1) * 16);
 			break;
-			
 			
 		case loginCheck:
 		
@@ -293,7 +272,6 @@ int Menu_Flow(int state)
 				LCD_Cursor(33);
 				state = prelogin;
 			}
-			
 			break;
 			
 		case lockedState:
@@ -309,14 +287,14 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				keypadEntry = 'x';
 			}
-		break;
+			break;
 		
 		case incorrectDelay:
 		
 			//mapped to save lines of code
+			//can save 50ish lines here since a lot of code is reused
 			switch(currentDelay){
-				case -1:
-					break;
+				case -1: break;
 					
 				case initialDelay:
 					if(incorrect_delay_count == 5){
@@ -408,10 +386,8 @@ int Menu_Flow(int state)
 					}
 					break;
 					
-				default:
-					break;
+				default: break;
 			}
-			
 			break;
 			
 		case validDelay:
@@ -679,14 +655,11 @@ int Menu_Flow(int state)
 				state = mainMenu;
 				LCD_Cursor(33);
 			}
-			
 			break;
-			
 		
 		case manualUnlockDelay:
 		
 			if(manual_count == 5){
-				//add a delay
 				LCD_ClearScreen();
 				LCD_DisplayString(1, unlockedManually1);
 				LCD_Cursor(6);
@@ -769,7 +742,6 @@ int Menu_Flow(int state)
 				timeASeconds = 0;
 				timeBSeconds = 0;
 				state = ResetMessageDelay;
-
 			}
 			else if(!passwordProg && checkComplete && !passwordCorrect){
 				attempts += 1;
@@ -813,21 +785,14 @@ int Menu_Flow(int state)
 			}
 			break;
 		
-		
-		default:
-			state = -1;
-			break;
+		default: state = -1; break;
 	}
 	
 	//actions
 	switch(state)
 	{
-		case -1:
-			break;
-			
-		case setup:
-			system_setup();
-			break;
+		case -1: break;
+		case setup: system_setup(); break;
 		
 		case welcomeInit:
 			LCD_ClearScreen();
@@ -836,26 +801,12 @@ int Menu_Flow(int state)
 			LCD_Cursor(33);
 			break;
 			
-		case welcomeToggle:
-			break;
-			
-		case prelogin:
-			break;
-			
-		case loginCheck:			
-			break;
-		
-		case lockedState:
-			lock_delay_count += 1;
-			break;		
-		
-		case incorrectDelay:
-			incorrect_delay_count += 1;
-			break;
-			
-		case validDelay:
-			valid_delay_count += 1;
-			break;
+		case welcomeToggle: break;
+		case prelogin: break;
+		case loginCheck: break;
+		case lockedState: lock_delay_count += 1; break;		
+		case incorrectDelay: incorrect_delay_count += 1; break;
+		case validDelay: valid_delay_count += 1;	break;
 		
 		case mainMenu:
 			//handling cursor position and menu output
@@ -901,11 +852,8 @@ int Menu_Flow(int state)
 			LCD_Cursor(((cursorPosition % 2) + 1) * 16);
 			break;
 		
-		case itemLock:
-			break;
-			
-		case itemLockMenu:
-			break;	
+		case itemLock: break;
+		case itemLockMenu: break;	
 			
 		case itemLockSetTime:
 		
@@ -977,31 +925,15 @@ int Menu_Flow(int state)
 					LCD_Cursor(17 + time_position_count);
 				}		
 			}
-			
 			keypadEntry = 'x';
-
 			break;
 			
-		case itemLockLogic:
-			lockItem_count += 1;
-			break;
-			
-		case manualUnlock:
-			break;
-			
-		case manualUnlockPassword:
-			break;
-			
-		case manualUnlockDelay:
-			manual_count += 1;
-			break;
-			
-		case display:
-			displayCount += 1;
-			break;
-			
-		case passwordReset:
-			break;
+		case itemLockLogic: lockItem_count += 1; break;
+		case manualUnlock: break;
+		case manualUnlockPassword: break;
+		case manualUnlockDelay: manual_count += 1; break;
+		case display: displayCount += 1; break;
+		case passwordReset: break;
 			
 		case newPasswordInput:
 			if(!overwriteComplete){
@@ -1032,26 +964,13 @@ int Menu_Flow(int state)
 			}
 			break;
 		
-		case systemReset:
-			break;
-		
-		case ResetMessageDelay:
-			reset_delay_count += 1;
-			break;			
-		
-		default:
-			break;
-	}
-
-
-	//integration v1	
-	if(state < 10){
-		PORTA = PORTA | 0x80;
-	}
-	else{
-		PORTA = PORTA & 0x7F;
+		case systemReset: break;
+		case ResetMessageDelay: reset_delay_count += 1; break;			
+		default: break;
 	}
 	
+	//integration v1
+	PORTA = (state < 10) ? PORTA | 0x80: PORTA & 0x7F;
 	return state;
 }
 
@@ -1061,9 +980,7 @@ int Keypad_Input(int state)
 	//transitions
 	switch(state)
 	{
-		case -1:
-			state = toggle;
-			break;
+		case -1: state = toggle; break;
 		
 		case toggle:
 			if(GetKeypadKey() != '\0'){
@@ -1075,18 +992,8 @@ int Keypad_Input(int state)
 			}
 			break;
 			
-		case press:	
-			if(GetKeypadKey() != '\0'){
-				state = press;
-			}
-			else{
-				state = toggle;
-			}
-			break;
-			
-		default:
-			state = -1;
-			break;
+		case press:	state = (GetKeypadKey() != '\0') ? press : toggle; break;
+		default: state = -1; break;
 	}
 	
 	//actions
@@ -1106,18 +1013,8 @@ int Password_Verify(int state)
 	//transitions
 	switch(state)
 	{
-		case -1:
-			state = idle;
-			break;
-		
-		case idle:
-			if(passwordProg){
-				state = inputWait;
-			}
-			else{
-				state = idle;
-			}
-			break;
+		case -1: state = idle; break;
+		case idle: state = (passwordProg) ? inputWait : idle; break;
 		
 		case inputWait:
 			if(passwordComplete){
@@ -1150,11 +1047,8 @@ int Password_Verify(int state)
 	switch(state)
 	{
 
-		case -1:
-		break;
-		
-		case idle:
-			break;
+		case -1: break;
+		case idle: break;
 		
 		case inputWait:
 			if(keypadEntry <= '9' && keypadEntry >= '0'){
@@ -1172,29 +1066,12 @@ int Password_Verify(int state)
 				keypadEntry = 'x';
 				switch (currentuser)
 				{
-					case initialLogin:
-						dir = userPromptRet;
-						break;
-						
-					case resettingSystem:
-						dir = menuRet;
-						break;
-						
-					case resettingPassword:
-						dir = menuRet;
-						break;
-						
-					case unlockingManually:
-						dir = menuRet;
-						break;
-						
-					case lockingItem:
-						dir = menuRet;
-						break;
-						
-					default:
-						//TODO
-						break;
+					case initialLogin: dir = userPromptRet; break;
+					case resettingSystem: dir = menuRet; break;
+					case resettingPassword: dir = menuRet; break;
+					case unlockingManually: dir = menuRet; break;
+					case lockingItem: dir = menuRet; break;
+					default: break;
 				}
 			}
 			
@@ -1206,6 +1083,7 @@ int Password_Verify(int state)
 			break;
 		
 		case passwordVerify:
+		//could reduce few lines here
 			for(int i = 0; i < 4; ++i){
 				if(password_Input[i] != password[i]){
 					passwordCorrect = 0;
@@ -1227,13 +1105,10 @@ int Password_Verify(int state)
 enum TimerCount{updateTime, timerDone};
 int Timer_Status(int state)
 {
-	
 	//transitions
 	switch(state)
 	{
-		case -1:
-			state = updateTime;
-			break;
+		case -1: state = updateTime; break;
 		
 		case updateTime:
 			
@@ -1270,7 +1145,6 @@ int Timer_Status(int state)
 			}
 			
 			timeCountdown += 1;
-			
 			break;
 		
 		case timerDone:
@@ -1300,14 +1174,10 @@ int Timer_Status(int state)
 					unlock2_count += 1;
 					state = timerDone;
 				}
-
 			}
-			
 			break;
 			
-		default:
-			state = -1;
-			break;
+		default: state = -1; break;
 	}
 	
 	//actions
