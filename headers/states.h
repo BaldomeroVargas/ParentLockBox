@@ -120,10 +120,6 @@ void menu_start(){
 	LCD_ClearScreen();
 	LCD_DisplayString(1,menuOptions[0]);
 	LCD_DisplayString(17,menuOptions[1]);
-	LCD_Cursor(16);
-	LCD_WriteData('+');
-	LCD_Cursor(32);
-	LCD_WriteData('-');
 	cursorIndex = 0;
 	cursorPosition = 0;
 	LCD_Cursor(((cursorIndex % 2) + 1) * 16);
@@ -170,10 +166,6 @@ int Menu_Flow(int state)
 				LCD_DisplayString(17, showTimeB);
 				displayTime(timeASeconds, 0);
 				displayTime(timeBSeconds, 1);
-				LCD_Cursor(32);
-				LCD_WriteData('-');
-				LCD_Cursor(16);
-				LCD_WriteData('+');
 				keypadEntry = 'x';
 			}
 			else if(keypadEntry == '2'){
@@ -208,7 +200,6 @@ int Menu_Flow(int state)
 				keypadEntry = 'x';
 				break;
 			}
-			
 			if(keypadEntry == 'C' && childUserCursor < 1){
 				childUserCursor += 1;
 			}
@@ -217,7 +208,6 @@ int Menu_Flow(int state)
 			}
 			
 			//reward system logic
-			//could reduce lines here with ternary
 			if(inputPolling >= 1){
 				inputPolling = 0;
 				if(inputA & 0x04){
@@ -818,10 +808,6 @@ int Menu_Flow(int state)
 						LCD_ClearScreen();
 						LCD_DisplayString(1,menuOptions[cursorIndex - 1]);
 						LCD_DisplayString(17,menuOptions[cursorIndex]);		
-						LCD_Cursor(16);
-						LCD_WriteData('+');
-						LCD_Cursor(32);
-						LCD_WriteData('-');
 					}
 					else{
 						cursorPosition = 0;
@@ -837,10 +823,6 @@ int Menu_Flow(int state)
 						LCD_ClearScreen();
 						LCD_DisplayString(1,menuOptions[cursorIndex]);
 						LCD_DisplayString(17,menuOptions[cursorIndex + 1]);
-						LCD_Cursor(16);
-						LCD_WriteData('+');
-						LCD_Cursor(32);
-						LCD_WriteData('-');
 					}
 					else{
 						cursorPosition = 1;	
