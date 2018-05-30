@@ -275,94 +275,27 @@ int Menu_Flow(int state)
 			break;
 		
 		case incorrectDelay:
-		
-			//mapped to save lines of code
-			//can save 50ish lines here since a lot of code is reused
-			switch(currentDelay){
-				case -1: break;
-					
-				case initialDelay:
-					if(incorrect_delay_count == 5){
-						LCD_ClearScreen();
-						LCD_DisplayString(1, failLogin);
-					}
-					else if(incorrect_delay_count >= 20){
-						incorrect_delay_count = 0;
-						passwordProg = 1;
-						state = loginCheck;
-						currentDelay = -1;
-						LCD_ClearScreen();
-						LCD_DisplayString(1,loginTop);
-						keypadEntry = 'x';
-					}
-					break;
-					
-				case lockingItemDelay:
-					if(incorrect_delay_count == 5){
-						LCD_ClearScreen();
-						LCD_DisplayString(1, failLogin);
-					}
-					else if(incorrect_delay_count >= 20){
-						incorrect_delay_count = 0;
-						passwordProg = 1;
-						state = itemLock;
-						currentDelay = -1;
-						LCD_ClearScreen();
-						LCD_DisplayString(1, loginTop);
-						keypadEntry = 'x';
-					}
-					break;
-					
-				case resettingSystemDelay:
-					if(incorrect_delay_count == 5){
-						LCD_ClearScreen();
-						LCD_DisplayString(1, failLogin);
-					}
-					else if(incorrect_delay_count >= 20){
-						incorrect_delay_count = 0;
-						passwordProg = 1;
-						state = systemReset;
-						currentDelay = -1;
-						LCD_ClearScreen();
-						LCD_DisplayString(1, systemResetTop);
-						keypadEntry = 'x';
-					}
-					break;
-					
-				case resettingPasswordDelay:
-					if(incorrect_delay_count == 5){
-						LCD_ClearScreen();
-						LCD_DisplayString(1, failLogin);
-					}
-					else if(incorrect_delay_count >= 20){
-						incorrect_delay_count = 0;
-						passwordProg = 1;
-						state = passwordReset;
-						currentDelay = -1;
-						LCD_ClearScreen();
-						LCD_DisplayString(1,loginTop);
-						keypadEntry = 'x';
-					}
-					break;
-					
-				case unlockingManuallyDelay:
-					if(incorrect_delay_count == 5){
-						LCD_ClearScreen();
-						LCD_DisplayString(1, failLogin);
-					}
-					else if(incorrect_delay_count >= 20){
-						incorrect_delay_count = 0;
-						passwordProg = 1;
-						state = manualUnlockPassword;
-						currentDelay = -1;
-						LCD_ClearScreen();
-						LCD_DisplayString(1,loginTop);
-						keypadEntry = 'x';
-					}
-					break;
-					
-				default: break;
+			if(incorrect_delay_count == 5){
+				LCD_ClearScreen();
+				LCD_DisplayString(1, failLogin);
 			}
+			else if(incorrect_delay_count >= 20){
+				incorrect_delay_count = 0;
+				passwordProg = 1;
+				switch(currentDelay){
+					case -1: break;
+					case initialDelay: state = loginCheck; break;
+					case lockingItemDelay: state = itemLock; break;
+					case resettingSystemDelay: state = systemReset; break;
+					case resettingPasswordDelay: state = passwordReset; break;
+					case unlockingManuallyDelay: state = manualUnlockPassword; break;
+					default: break;
+				}
+				currentDelay = -1;
+				LCD_ClearScreen();
+				LCD_DisplayString(1,loginTop);
+				keypadEntry = 'x';
+			}	
 			break;
 			
 		case validDelay:
@@ -623,7 +556,7 @@ int Menu_Flow(int state)
 				LCD_DisplayString(8, unlockedManually2);
 				manual_unlock_choice = -1;
 			}
-			else if(manual_count == 20){
+			else if(manual_count == 50){
 				menu_start();
 				state = mainMenu;
 				manual_count = 0;
