@@ -103,6 +103,8 @@ void LCD_DisplayString( unsigned char column, const unsigned char* string) {
 		LCD_Cursor(c++);
 		LCD_WriteData(*string++);
 	}
+	
+	LCD_Cursor(33);
 }
 
 #endif // LCD_H

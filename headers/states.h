@@ -147,7 +147,6 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1,preLoginTop);
 				LCD_DisplayString(17,preLoginBot);
-				LCD_Cursor(33);
 				keypadEntry = 'x';
 			}
 			else{
@@ -173,7 +172,6 @@ int Menu_Flow(int state)
 				state = loginCheck;
 				LCD_ClearScreen();
 				LCD_DisplayString(1,loginTop);
-				LCD_Cursor(33);
 				keypadEntry = 'x';
 				passwordProg = 1;
 				currentuser = initialLogin;
@@ -196,7 +194,6 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1,preLoginTop);
 				LCD_DisplayString(17,preLoginBot);
-				LCD_Cursor(33);
 				keypadEntry = 'x';
 				break;
 			}
@@ -259,7 +256,6 @@ int Menu_Flow(int state)
 				dir = -1;
 				LCD_DisplayString(1,preLoginTop);
 				LCD_DisplayString(17,preLoginBot);
-				LCD_Cursor(33);
 				state = prelogin;
 			}
 			break;
@@ -269,7 +265,6 @@ int Menu_Flow(int state)
 			if(lock_delay_count == 5){
 				LCD_ClearScreen();
 				LCD_DisplayString(1, lockMessage);
-				LCD_Cursor(33);
 			}
 			else if(lock_delay_count >= 605){
 				lock_delay_count = 0;
@@ -290,7 +285,6 @@ int Menu_Flow(int state)
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
 						LCD_DisplayString(1, failLogin);
-						LCD_Cursor(33);
 					}
 					else if(incorrect_delay_count >= 20){
 						incorrect_delay_count = 0;
@@ -299,7 +293,6 @@ int Menu_Flow(int state)
 						currentDelay = -1;
 						LCD_ClearScreen();
 						LCD_DisplayString(1,loginTop);
-						LCD_Cursor(33);
 						keypadEntry = 'x';
 					}
 					break;
@@ -308,7 +301,6 @@ int Menu_Flow(int state)
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
 						LCD_DisplayString(1, failLogin);
-						LCD_Cursor(33);
 					}
 					else if(incorrect_delay_count >= 20){
 						incorrect_delay_count = 0;
@@ -317,7 +309,6 @@ int Menu_Flow(int state)
 						currentDelay = -1;
 						LCD_ClearScreen();
 						LCD_DisplayString(1, loginTop);
-						LCD_Cursor(33);
 						keypadEntry = 'x';
 					}
 					break;
@@ -326,7 +317,6 @@ int Menu_Flow(int state)
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
 						LCD_DisplayString(1, failLogin);
-						LCD_Cursor(33);
 					}
 					else if(incorrect_delay_count >= 20){
 						incorrect_delay_count = 0;
@@ -335,7 +325,6 @@ int Menu_Flow(int state)
 						currentDelay = -1;
 						LCD_ClearScreen();
 						LCD_DisplayString(1, systemResetTop);
-						LCD_Cursor(33);
 						keypadEntry = 'x';
 					}
 					break;
@@ -344,7 +333,6 @@ int Menu_Flow(int state)
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
 						LCD_DisplayString(1, failLogin);
-						LCD_Cursor(33);
 					}
 					else if(incorrect_delay_count >= 20){
 						incorrect_delay_count = 0;
@@ -353,7 +341,6 @@ int Menu_Flow(int state)
 						currentDelay = -1;
 						LCD_ClearScreen();
 						LCD_DisplayString(1,loginTop);
-						LCD_Cursor(33);
 						keypadEntry = 'x';
 					}
 					break;
@@ -362,7 +349,6 @@ int Menu_Flow(int state)
 					if(incorrect_delay_count == 5){
 						LCD_ClearScreen();
 						LCD_DisplayString(1, failLogin);
-						LCD_Cursor(33);
 					}
 					else if(incorrect_delay_count >= 20){
 						incorrect_delay_count = 0;
@@ -371,7 +357,6 @@ int Menu_Flow(int state)
 						currentDelay = -1;
 						LCD_ClearScreen();
 						LCD_DisplayString(1,loginTop);
-						LCD_Cursor(33);
 						keypadEntry = 'x';
 					}
 					break;
@@ -385,7 +370,6 @@ int Menu_Flow(int state)
 			if(valid_delay_count == 5){
 				LCD_ClearScreen();
 				LCD_DisplayString(1,successLogin);
-				LCD_Cursor(33);
 			}
 			else if(valid_delay_count >= 20){
 				menu_start();	
@@ -403,7 +387,6 @@ int Menu_Flow(int state)
 						state = itemLock;
 						LCD_ClearScreen();
 						LCD_DisplayString(1, loginTop);
-						LCD_Cursor(33);
 						passwordProg = 1;
 						currentuser = lockingItem;
 						break;
@@ -413,7 +396,6 @@ int Menu_Flow(int state)
 						LCD_ClearScreen();
 						LCD_DisplayString(1, mUnlockTop);
 						LCD_DisplayString(17, mUnlockBot);
-						LCD_Cursor(33);
 						break;
 						
 					case 2:
@@ -430,7 +412,6 @@ int Menu_Flow(int state)
 						state = passwordReset;
 						LCD_ClearScreen();
 						LCD_DisplayString(1, loginTop);
-						LCD_Cursor(33);
 						passwordProg = 1;
 						currentuser = resettingPassword;
 						break;
@@ -441,7 +422,6 @@ int Menu_Flow(int state)
 						currentuser = resettingSystem;
 						LCD_ClearScreen();
 						LCD_DisplayString(1, systemResetTop);
-						LCD_Cursor(33);
 						break;
 					
 					case 5:
@@ -457,7 +437,6 @@ int Menu_Flow(int state)
 			if(!passwordProg && checkComplete && passwordCorrect){
 				LCD_ClearScreen();
 				LCD_DisplayString(1, newPassword);
-				LCD_Cursor(33);
 				passwordProg = 0;
 				passwordCorrect = 0;
 				attempts = 0;
@@ -465,7 +444,6 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1, mUnlockTop);
 				LCD_DisplayString(17, mUnlockBot);
-				LCD_Cursor(33);
 			}
 			else if(!passwordProg && checkComplete && !passwordCorrect){
 				attempts += 1;
@@ -496,6 +474,7 @@ int Menu_Flow(int state)
 			}
 			break;
 			
+		//clean up here
 		case itemLockMenu:
 			if(keypadEntry == '1'){
 				state = itemLockSetTime;
@@ -574,23 +553,13 @@ int Menu_Flow(int state)
 			break;
 		
 		case manualUnlock:
-			if(keypadEntry == '1'){
+			if(keypadEntry == '1' || keypadEntry == '2'){
 				state = manualUnlockPassword;
-				manual_unlock_choice = 0;
+				manual_unlock_choice = (keypadEntry == '1') ? 0 : 1;
 				currentuser = unlockingManually;
 				passwordProg = 1;
 				LCD_ClearScreen();
 				LCD_DisplayString(1,loginTop);
-				LCD_Cursor(33);
-			}
-			else if(keypadEntry == '2'){
-				state = manualUnlockPassword;
-				manual_unlock_choice = 1;
-				currentuser = unlockingManually;
-				passwordProg = 1;
-				LCD_ClearScreen();
-				LCD_DisplayString(1,loginTop);
-				LCD_Cursor(33);
 			}
 			else if(keypadEntry == 'D'){
 				state = mainMenu;
@@ -603,7 +572,6 @@ int Menu_Flow(int state)
 			break;
 			
 		case manualUnlockPassword:
-		
 			if(!passwordProg && checkComplete && passwordCorrect){
 				passwordProg = 0;
 				passwordCorrect = 0;
@@ -614,9 +582,7 @@ int Menu_Flow(int state)
 				else{
 					timeBSeconds = 0;					
 				}
-				
 				state = manualUnlockDelay;
-
 			}
 			else if(!passwordProg && checkComplete && !passwordCorrect){
 				attempts += 1;
@@ -655,7 +621,6 @@ int Menu_Flow(int state)
 				LCD_Cursor(6);
 				LCD_WriteData('A'+ manual_unlock_choice);
 				LCD_DisplayString(8, unlockedManually2);
-				LCD_Cursor(33);
 				manual_unlock_choice = -1;
 			}
 			else if(manual_count == 20){
@@ -678,7 +643,6 @@ int Menu_Flow(int state)
 			if(!passwordProg && checkComplete && passwordCorrect){
 				LCD_ClearScreen();
 				LCD_DisplayString(1, newPassword);
-				LCD_Cursor(33);
 				passwordProg = 0;
 				passwordCorrect = 0;
 				attempts = 0;
@@ -767,7 +731,6 @@ int Menu_Flow(int state)
 			if(reset_delay_count == 5){
 				LCD_ClearScreen();
 				LCD_DisplayString(1, systemResetComplete);
-				LCD_Cursor(33);
 			}
 			else if(reset_delay_count == 55){
 				state = setup;
@@ -788,7 +751,6 @@ int Menu_Flow(int state)
 			LCD_ClearScreen();
 			LCD_DisplayString(1,welcomeTop);
 			LCD_DisplayString(17,welcomeBot);
-			LCD_Cursor(33);
 			break;
 			
 		case welcomeToggle: break;
@@ -846,7 +808,6 @@ int Menu_Flow(int state)
 					LCD_ClearScreen();
 					LCD_DisplayString(1, mUnlockTop);
 					LCD_DisplayString(17, mUnlockBot);
-					LCD_Cursor(33);
 					keypadEntry = 'x';
 					break;
 				}
@@ -877,7 +838,6 @@ int Menu_Flow(int state)
 			//confirm case
 			if(time_position_count >= 5){
 				LCD_DisplayString(24, timeComfirm);
-				LCD_Cursor(33);
 			}
 			//enter case
 			else{
@@ -901,7 +861,6 @@ int Menu_Flow(int state)
 						LCD_Cursor(time_position_count + 17);
 						time_Input[time_position_count] = keypadEntry;
 						LCD_WriteData(keypadEntry);
-						//write to array
 						time_position_count += 1;
 					}
 					LCD_Cursor(17 + time_position_count);
@@ -952,6 +911,7 @@ int Menu_Flow(int state)
 	}
 	
 	//integration v1
+	//PIN7
 	PORTA = (state < 10) ? PORTA | 0x80: PORTA & 0x7F;
 	return state;
 }
