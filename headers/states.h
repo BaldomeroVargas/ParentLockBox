@@ -265,6 +265,20 @@ int Menu_Flow(int state)
 						LCD_ClearScreen();
 						LCD_DisplayString(1, mUnlockTop);
 						LCD_DisplayString(17, mUnlockBot);
+						LCD_Cursor(16);
+						if(timeASeconds != 0){
+							LCD_WriteData('C');
+						}
+						else{
+							LCD_WriteData('O');
+						}
+						LCD_Cursor(32);
+						if(timeBSeconds != 0){
+							LCD_WriteData('C');
+						}
+						else{
+							LCD_WriteData('O');
+						}
 						break;
 						
 					case 2:
@@ -313,6 +327,20 @@ int Menu_Flow(int state)
 				LCD_ClearScreen();
 				LCD_DisplayString(1, mUnlockTop);
 				LCD_DisplayString(17, mUnlockBot);
+				LCD_Cursor(16);
+				if(timeASeconds != 0){
+					LCD_WriteData('C');
+				}
+				else{
+					LCD_WriteData('O');
+				}
+				LCD_Cursor(32);
+				if(timeBSeconds != 0){
+					LCD_WriteData('C');
+				}
+				else{
+					LCD_WriteData('O');
+				}
 			}
 			else if(!passwordProg && checkComplete && !passwordCorrect){
 				attempts += 1;
@@ -673,6 +701,20 @@ int Menu_Flow(int state)
 					LCD_ClearScreen();
 					LCD_DisplayString(1, mUnlockTop);
 					LCD_DisplayString(17, mUnlockBot);
+					LCD_Cursor(16);
+					if(timeASeconds != 0){
+						LCD_WriteData('C');
+					}
+					else{
+						LCD_WriteData('O');
+					}
+					LCD_Cursor(32);
+					if(timeBSeconds != 0){
+						LCD_WriteData('C');
+					}
+					else{
+						LCD_WriteData('O');
+					}
 					keypadEntry = 'x';
 					break;
 				}
