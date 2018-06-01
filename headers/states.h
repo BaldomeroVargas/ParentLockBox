@@ -655,8 +655,6 @@ int Menu_Flow(int state)
 		case validDelay: valid_delay_count += 1;	break;
 		
 		case mainMenu:
-			//handling cursor position and menu output
-			PORTD = (cursorPosition << 5) | cursorIndex;
 			if(keypadEntry == 'A'){
 				if(cursorIndex > 0){
 					if(cursorPosition == 0){
