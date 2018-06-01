@@ -146,10 +146,10 @@ int Menu_Flow(int state)
 				inputPolling = 0;
 				if(inputA & 0x04){
 					if(childUserCursor == 0){
-						timeASeconds = (timeASeconds <= 60) ? 0 : (timeASeconds - 60);
+						timeASeconds = (timeASeconds <= 60) ? 0 : (timeASeconds - 300);
 					}
 					else{
-						timeBSeconds = (timeBSeconds <= 60) ? 0 : (timeBSeconds - 60);
+						timeBSeconds = (timeBSeconds <= 60) ? 0 : (timeBSeconds - 300);
 					}
 				}
 			}
