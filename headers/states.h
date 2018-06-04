@@ -71,7 +71,6 @@ enum Menu{setup, welcomeInit, welcomeToggle, prelogin, childUser, display, login
 		  newPasswordInput, systemReset, ResetMessageDelay};			  	  
 int Menu_Flow(int state)
 {
-	unsigned char inputA = ~PINA;
 	//transitions
 	switch(state)
 	{
@@ -123,8 +122,11 @@ int Menu_Flow(int state)
 			
 			
 		case childUser:
-			//return to welcome
+			
+			coinDetect = 1;
+			
 			if(keypadEntry == 'D' || childUserWait >= 100){
+				coinDetect = 0;
 				childUserWait = 0;
 				showTime = 0;
 				state = prelogin;
@@ -139,22 +141,6 @@ int Menu_Flow(int state)
 			}
 			else if(keypadEntry == 'A' && childUserCursor > 0){
 				childUserCursor -= 1;
-			}
-			
-			//reward system logic
-			if(inputPolling >= 1){
-				inputPolling = 0;
-				if(inputA & 0x04){
-					if(childUserCursor == 0){
-						timeASeconds = (timeASeconds <= 60) ? 0 : (timeASeconds - 300);
-					}
-					else{
-						timeBSeconds = (timeBSeconds <= 60) ? 0 : (timeBSeconds - 300);
-					}
-				}
-			}
-			else{
-				inputPolling += 1;
 			}
 			
 			childUserWait += 1;
@@ -1035,5 +1021,44 @@ int Timer_Status(int state)
 	}
 	return state;
 }
+
+
+enum IRpoll{polling};
+int IR_Check(int state)
+{
+	
+	unsigned char inputA = ~PINA;
+				
+	//transitions
+	switch(state)
+	{
+		case -1: state = polling; break;
+		
+		case polling:
+			
+			//reward system logic
+			if((inputA & 0x04) && coinDetect){
+				if(childUserCursor == 0){
+					timeASeconds = (timeASeconds <= 60) ? 0 : (timeASeconds - 300);
+				}
+				else{
+					timeBSeconds = (timeBSeconds <= 60) ? 0 : (timeBSeconds - 300);
+				}
+			}
+		
+			break;
+		
+		default: state = -1; break;
+	}
+	
+	//actions
+	switch(state)
+	{
+		case -1: break;
+		default: break;
+	}
+	return state;
+}
+
 
 #endif

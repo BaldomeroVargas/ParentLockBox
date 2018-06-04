@@ -39,7 +39,7 @@ unsigned char overwriteDelay = 0;
 //child user flags
 unsigned char childUserWait = 0;
 unsigned char childUserCursor = 0;
-unsigned char inputPolling = 0;
+unsigned char coinDetect = 0;
 
 //manual unlock/system reset flags
 unsigned char systemResetUnlock = 0;

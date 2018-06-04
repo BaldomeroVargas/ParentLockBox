@@ -20,8 +20,8 @@ int main(void)
 	LCD_init();	
 	
 	//Task Scheduler
-	tasksNum = 4;
-	task tsks[4];
+	tasksNum = 5;
+	task tsks[5];
 	tasks = tsks;
 			
 	tasks[0].state = -1;
@@ -43,8 +43,13 @@ int main(void)
 	tasks[3].period = 100;  
 	tasks[3].elapsedTime = tasks[3].period;
 	tasks[3].TickFct = &Timer_Status;
+	
+	tasks[4].state = -1;
+	tasks[4].period = 50;
+	tasks[4].elapsedTime = tasks[4].period;
+	tasks[4].TickFct = &IR_Check;
 			
-	TimerSet(100);
+	TimerSet(50);
 	TimerOn();
 			
 	while(1){}
