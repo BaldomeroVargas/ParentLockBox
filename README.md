@@ -15,7 +15,7 @@ mstrings.h: Holds strings output to LCD
 
 ## The following files where provided by the ECE department at UCR (given in CS120B/CS122A):
 
-bit.h, keypad.h, scheduler.h
+keypad.h, scheduler.h
 
 lcd.h: provided but slightly modified to support use of shift registers in data lines
 
